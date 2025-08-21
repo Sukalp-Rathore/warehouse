@@ -15,7 +15,7 @@
                 <div class="card-header justify-content-between">
                     <div class="card-title">All Products</div>
                     <div class="card-options">
-                        <button type="button" class="btn btn-outline-primary my-1 me-2">Total Stock Amount <span
+                        <button type="button" class="btn btn-outline-primary my-1">Total Stock Amount <span
                                 class="badge ms-2">{{ $totalStockAmount }}</span></button>
                         <a class="btn btn-primary btn-sm add-product">Add Product</a>
                         <a class="btn btn-secondary btn-sm update-stock">Update Stock</a>
@@ -28,8 +28,6 @@
                                 <tr>
                                     <th>S.No</th>
                                     <th>Product Name</th>
-                                    <th>Color</th>
-                                    <th>Type</th>
                                     <th>Selling Price</th>
                                     <th>Quantiy</th>
                                     <th>Stock Price</th>
@@ -45,8 +43,6 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $p->product_name }}</td>
-                                        <td>{{ $p->color }}</td>
-                                        <td>{{ $p->type }}</td>
                                         <td>{{ $p->selling_price }}</td>
                                         <td>{{ $p->quantity ?? '' }}</td>
                                         <td>{{ $stockPrice ?? 'N/A' }}</td>
@@ -83,20 +79,6 @@
                             <label for="product_name" class="form-label">Product Name</label>
                             <input type="text" class="form-control" id="product_name" name="product_name"
                                 placeholder="Enter Product Name" required autocomplete="off">
-                        </div>
-                        <div class="mb-3">
-                            <label for="color" class="form-label">Color</label>
-                            <input type="text" class="form-control" id="color" name="color"
-                                placeholder="Enter Product Color" required autocomplete="off">
-                        </div>
-                        <div class="mb-3">
-                            <label for="type" class="form-label">Product Type</label>
-                            <select class="form-select" id="type" name="type">
-                                <option value="" selected>Choose desired product type</option>
-                                <option value="flower">Flower</option>
-                                <option value="fillable">Fillables</option>
-                                <option value="chocolate">Chocolates</option>
-                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="selling_price" class="form-label">Selling Price</label>

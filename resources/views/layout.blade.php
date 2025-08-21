@@ -8,11 +8,11 @@
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>FNP</title>
-    <meta name="Description" content="FNP">
-    <meta name="Author" content="FNP">
+    <title>Health</title>
+    <meta name="Description" content="Health">
+    <meta name="Author" content="Health">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="keywords" content="FNP">
+    <meta name="keywords" content="Health">
 
     <!-- Favicon -->
     <link rel="icon" href="assets/images/brand-logos/1.png" type="image/x-icon">
@@ -153,12 +153,18 @@
                     <div class="header-element">
                         <div class="horizontal-logo">
                             <a href="index.html" class="header-logo">
-                                <img src="assets/images/brand-logos/fnp-logo.jpeg" alt="logo" class="desktop-logo">
-                                <img src="assets/images/brand-logos/fnp-logo.jpeg" alt="logo" class="toggle-dark">
-                                <img src="assets/images/brand-logos/fnp-logo.jpeg" alt="logo" class="desktop-dark">
-                                <img src="assets/images/brand-logos/fnp-logo.jpeg" alt="logo" class="toggle-logo">
-                                <img src="assets/images/brand-logos/fnp-logo.jpeg" alt="logo" class="toggle-white">
-                                <img src="assets/images/brand-logos/fnp-logo.jpeg" alt="logo" class="desktop-white">
+                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                    style="mix-blend-mode:color-burn" class="desktop-logo">
+                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                    style="mix-blend-mode:color-burn" class="toggle-dark">
+                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                    style="mix-blend-mode:color-burn" class="desktop-dark">
+                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                    style="mix-blend-mode:color-burn" class="toggle-logo">
+                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                    style="mix-blend-mode:color-burn" class="toggle-white">
+                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                    style="mix-blend-mode:color-burn" class="desktop-white">
                             </a>
                         </div>
                     </div>
@@ -192,7 +198,7 @@
                             <li>
                                 <div class="dropdown-item text-center border-bottom">
                                     <span>
-                                        Admin Sharad
+                                        Admin
                                     </span>
                                 </div>
                             </li>
@@ -216,8 +222,8 @@
             <!-- Start::main-sidebar-header -->
             <div class="main-sidebar-header">
                 <a class="header-logo">
-                    <img src="assets/images/brand-logos/fnp-logo.jpeg" alt="logo" class="desktop-dark ttmain">
-                    <img src="assets/images/brand-logos/fnp-logo.jpeg" alt="logo" class="toggle-dark">
+                    <img src="assets/images/brand-logos/florist.png" alt="logo" class="desktop-dark ttmain">
+                    <img src="assets/images/brand-logos/florist.png" alt="logo" class="toggle-dark">
                 </a>
             </div>
             <!-- End::main-sidebar-header -->
@@ -242,26 +248,32 @@
                                 <span class="side-menu__label">Dashboard</span>
                             </a>
                         </li>
-                        <!-- Start::slide -->
                         <li class="slide">
-                            <a href="{{ route('mails') }}"
-                                class="side-menu__item  {{ url()->current() == route('mails') ? 'active' : '' }}">
-                                <i class="bi bi-envelope-at-fill w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Mails</span>
+                            <a href="{{ route('patients') }}"
+                                class="side-menu__item {{ url()->current() == route('patients') ? 'active' : '' }}">
+                                <i class="bi bi-person w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Patients</span>
                             </a>
                         </li>
                         <li class="slide">
-                            <a href="{{ route('customers') }}"
-                                class="side-menu__item  {{ url()->current() == route('customers') ? 'active' : '' }}">
-                                <i class="bi bi-person-fill-gear w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Customers</span>
+                            <a href="{{ route('visits') }}"
+                                class="side-menu__item {{ url()->current() == route('visits') ? 'active' : '' }}">
+                                <i class="bi bi-person w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Visits</span>
                             </a>
                         </li>
                         <li class="slide">
-                            <a href="{{ route('vendors') }}"
-                                class="side-menu__item  {{ url()->current() == route('vendors') ? 'active' : '' }}">
-                                <i class="bi bi-shop w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Vendors</span>
+                            <a href="{{ route('appointments') }}"
+                                class="side-menu__item {{ url()->current() == route('appointments') ? 'active' : '' }}">
+                                <i class="bi bi-plus w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Show Appointment</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('create.appointment') }}"
+                                class="side-menu__item {{ url()->current() == route('create.appointment') ? 'active' : '' }}">
+                                <i class="bi bi-plus w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Create Appointment</span>
                             </a>
                         </li>
                         <li class="slide">
@@ -271,41 +283,7 @@
                                 <span class="side-menu__label">Inventory Management</span>
                             </a>
                         </li>
-                        <li class="slide">
-                            <a href="{{ route('bouquet') }}"
-                                class="side-menu__item  {{ url()->current() == route('bouquet') ? 'active' : '' }}">
-                                <i class="bi bi-flower2 w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Bouquet Management</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('all-orders') }}"
-                                class="side-menu__item  {{ url()->current() == route('all-orders') ? 'active' : '' }}">
-                                <i class="bi bi-box-seam w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Order Management</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('sales') }}"
-                                class="side-menu__item  {{ url()->current() == route('sales') ? 'active' : '' }}">
-                                <i class="bi bi-cash-coin w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Sales Management</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('purchase') }}"
-                                class="side-menu__item  {{ url()->current() == route('purchase') ? 'active' : '' }}">
-                                <i class="bi bi-cash-stack w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Purchase Management</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('event') }}"
-                                class="side-menu__item  {{ url()->current() == route('event') ? 'active' : '' }}">
-                                <i class="bi bi-emoji-smile w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Event Management</span>
-                            </a>
-                        </li>
+                        <!-- Start::slide -->
                     </ul>
                     <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"
                             width="24" height="24" viewBox="0 0 24 24">
@@ -331,7 +309,7 @@
         <footer class="footer mt-auto py-3 bg-white text-center">
             <div class="container">
                 <span class="text-muted"> Copyright © <span id="year"></span> <a href="javascript:void(0);"
-                        class="text-dark fw-medium">FNP</a>
+                        class="text-dark fw-medium">Health</a>
                 </span>
             </div>
         </footer>

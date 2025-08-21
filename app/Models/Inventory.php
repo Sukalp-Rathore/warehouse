@@ -9,14 +9,12 @@ class Inventory extends Model
 {
     //
     use HasFactory;
+    protected $collection = 'inventory';
     protected $fillable = [
         'product_name',
-        'type',
-        'cost_price',
         'selling_price',
         'product_image',
         'quantity',
-        'total_stock_amount',
-        'color',
+        'total_stock_amount'
     ];
 }

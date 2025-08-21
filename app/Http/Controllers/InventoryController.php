@@ -27,8 +27,6 @@ class InventoryController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'product_name' => 'required|string|max:255',
-            'color' => 'required|string|max:50', // New field for color
-            'type' => 'required|string',
             'selling_price' => 'nullable|numeric',
             'product_image' => 'nullable|image|max:2048', // max 2MB
         ]);
@@ -51,6 +49,7 @@ class InventoryController extends Controller
         $product = new Inventory();
         $product->product_name = $request->product_name;
         $product->type = $request->type;
+        $product->color = $request->color;
         $product->selling_price = (int)$request->selling_price;
         $product->product_image = $base64Image; // base64 image stored in MongoDB
         $product->save();
@@ -99,8 +98,6 @@ class InventoryController extends Controller
         $request->validate([
             'product_id' => 'required|string',
             'product_name' => 'required|string|max:255',
-            'color' => 'required|string|max:50',
-            'type' => 'required|string',
             'selling_price' => 'required|numeric',
             'product_image' => 'nullable|image|max:2048', // Max 2MB
         ]);

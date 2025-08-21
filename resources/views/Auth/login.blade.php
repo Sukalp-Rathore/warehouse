@@ -8,9 +8,9 @@
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title> FNP </title>
-    <meta name="Description" content="FNP">
-    <meta name="Author" content="FNP">
+    <title> Health </title>
+    <meta name="Description" content="Health">
+    <meta name="Author" content="Health">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="keywords"
         content="admin,admin dashboard,admin panel,admin template,bootstrap,clean,dashboard,flat,jquery,modern,responsive,premium admin templates,responsive admin,ui,ui kit.">
@@ -94,11 +94,6 @@
         }
 
         /* custom loader */
-
-        .log-logo {
-            width: 110px;
-            height: 70px !important;
-        }
     </style>
 </head>
 
@@ -119,7 +114,7 @@
         <div class="col-xxl-6 col-xl-7">
             <div class="row justify-content-center align-items-center h-100">
                 <div class="col-xxl-8 col-xl-9 col-lg-6 col-md-6 col-sm-8 col-12">
-                    <img src="assets/images/brand-logos/fnp-logo.jpeg" alt=""
+                    <img src="assets/images/brand-logos/florist.png" alt=""
                         class="authentication-brand desktop-white mb-3 log-logo">
                     <div class="card custom-card my-auto border">
                         <div class="card-body p-5">
@@ -161,15 +156,10 @@
             <div class="authentication-cover overflow-hidden">
                 <div class="aunthentication-cover-content d-flex align-items-center justify-content-center">
                     <div>
-                        <h1 class="text-fixed-white mb-1 fw-medium" style="font-size:2.3rem">Welcome To Flowers and
-                            Petals!
+                        <h1 class="text-fixed-white mb-1 fw-medium" style="font-size:2.3rem">HEALTH!
                         </h1>
-                        <h6 class="text-fixed-white mb-3">Flowers and Petals management system.</h6>
-                        <p class="text-fixed-white mb-1 op-6">A seamless order processing and inventory tracking
-                            solution,
-                            featuring bouquet creation management and digital receipt generation to support optimized
-                            supply
-                            workflows.</p>
+                        <h6 class="text-fixed-white mb-3">Health management system.</h6>
+                        <p class="text-fixed-white mb-1 op-6">Health Industry Solutions</p>
                     </div>
                 </div>
             </div>

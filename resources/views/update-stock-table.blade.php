@@ -7,7 +7,6 @@
         <tr>
             <th>S.No</th>
             <th>Product Name</th>
-            <th>Color</th>
             <th>Current Quantity</th>
             <th>Update Quantity</th>
         </tr>
@@ -17,7 +16,6 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $product->product_name }}</td>
-                <td>{{ $product->color }}</td>
                 <td>{{ $product->quantity ?? 0 }}</td>
                 <td>
                     <input type="number" class="form-control update-quantity" name="stock[{{ $loop->index }}][quantity]"

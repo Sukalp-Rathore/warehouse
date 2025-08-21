@@ -7,20 +7,6 @@
         <input type="text" class="form-control" id="product_name" name="product_name"
             value="{{ $product->product_name }}" required>
     </div>
-    <div class="mb-3">
-        <label for="color" class="form-label">Color</label>
-        <input type="text" class="form-control" id="color" name="color" value="{{ $product->color ?? '' }}"
-            required>
-    </div>
-
-    <div class="mb-3">
-        <label for="type" class="form-label">Product Type</label>
-        <select class="form-select" id="type" name="type" required>
-            <option value="flower" {{ $product->type == 'flower' ? 'selected' : '' }}>Flower</option>
-            <option value="fillable" {{ $product->type == 'fillable' ? 'selected' : '' }}>Fillables</option>
-            <option value="chocolate" {{ $product->type == 'chocolate' ? 'selected' : '' }}>Chocolates</option>
-        </select>
-    </div>
 
     <div class="mb-3">
         <label for="selling_price" class="form-label">Selling Price</label>

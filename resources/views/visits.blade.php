@@ -5,6 +5,107 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
     <!-- jQuery Confirm CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/css/jquery-confirm.min.css">
+    
+    <style>
+        .modern-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .modern-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .hover-row {
+            transition: all 0.2s ease;
+        }
+        
+        .hover-row:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .avatar-initial {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-group .btn {
+            border-radius: 8px;
+            margin: 0 2px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-group .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .table-dark th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.5em 0.75em;
+            border-radius: 20px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 15px 15px 0 0 !important;
+        }
+        
+        .page-header-breadcrumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            color: white !important;
+            font-weight: 600;
+        }
+        
+        .add-visit {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .add-visit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(40, 167, 69, 0.3);
+        }
+    </style>
     <div class="d-flex align-items-center justify-content-between page-header-breadcrumb flex-wrap gap-2">
         <div>
             <h1 class="page-title fw-medium fs-18 mb-0">All Visits</h1>
@@ -13,7 +114,7 @@
 
     <div class="row">
         <div class="col-xl-12">
-            <div class="card custom-card">
+            <div class="card modern-card">
                 <div class="card-header justify-content-between">
                     <div class="card-title">Search Visits</div>
                     <div class="card-options">
@@ -23,35 +124,85 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="file-exports" class="table table-bordered text-nowrap w-100">
-                            <thead>
+                            <thead class="table-dark">
                                 <tr>
                                     <th>S.No</th>
-                                    <th>Patient Name</th>
-                                    <th>Mobile No.</th>
-                                    <th>Doctor Name</th>
-                                    <th>Gender</th>
-                                    <th>Age</th>
-                                    <th>Address</th>
-                                    <th>Created By</th>
-                                    <th>Options</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Visit Date</th>
+                                    <th>Treatment</th>
+                                    <th>Payment Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($visits as $p)
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $p->name }}</td>
-                                        <td>{{ $p->phone }}</td>
-                                        <td>{{ $p->doctor_name }}</td>
-                                        <td>{{ $p->gender }}</td>
-                                        <td>{{ $p->age }}</td>
-                                        <td>{{ $p->address }}</td>
-                                        <td>{{ $p->created_by }}</td>
+                                    <tr class="hover-row">
+                                        <td class="fw-bold">{{ $loop->iteration }}</td>
                                         <td>
-                                            <button class="btn btn-primary btn-sm editBtn"
-                                                data-id="{{ $p->_id }}">Edit</button>
-                                            <button class="btn btn-danger btn-sm deleteBtn"
-                                                data-id="{{ $p->_id }}">Delete</button>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm me-3">
+                                                    <span class="avatar-initial rounded-circle bg-primary text-white">
+                                                        {{ substr($p->name, 0, 1) }}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-semibold">{{ $p->name }}</h6>
+                                                    <small class="text-muted">{{ $p->phone }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-0">{{ $p->doctor_name }}</h6>
+                                                <small class="text-muted">{{ $p->gender }}, {{ $p->age }} years</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <span class="fw-semibold">{{ \Carbon\Carbon::parse($p->visit_date)->format('M d, Y') }}</span>
+                                                <br>
+                                                <small class="text-muted">{{ \Carbon\Carbon::parse($p->visit_date)->format('h:i A') }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($p->treatment_details)
+                                                <div>
+                                                    <h6 class="mb-1 text-primary">{{ $p->treatment_details }}</h6>
+                                                    <small class="text-muted">₹{{ number_format($p->treatment_cost ?? 0, 2) }}</small>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">No treatment</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($p->treatment_cost && $p->treatment_cost > 0)
+                                                <div class="text-center">
+                                                    <div class="mb-1">
+                                                        <span class="badge bg-{{ ($p->payment_status ?? 'pending') === 'completed' ? 'success' : (($p->payment_status ?? 'pending') === 'partial' ? 'warning' : 'secondary') }} fs-6">
+                                                            {{ ucfirst($p->payment_status ?? 'pending') }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="small">
+                                                        <div class="text-success">Paid: ₹{{ number_format($p->total_paid ?? 0, 2) }}</div>
+                                                        <div class="text-warning">Remaining: ₹{{ number_format($p->remaining_balance ?? ($p->treatment_cost ?? 0), 2) }}</div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">No payment</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{{ route('visits.sessions', $p->_id) }}" 
+                                                   class="btn btn-outline-primary btn-sm" title="Manage Visit">
+                                                    <i class="bi bi-gear"></i> Manage
+                                                </a>
+                                                <button class="btn btn-outline-danger btn-sm deleteBtn"
+                                                    data-id="{{ $p->_id }}" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

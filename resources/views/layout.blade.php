@@ -18,46 +18,46 @@
     <link rel="icon" href="assets/images/brand-logos/1.png" type="image/x-icon">
 
     <!-- Choices JS -->
-    <script src="assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="{{asset('assets/libs/choices.js/public/assets/scripts/choices.min.js')}}"></script>
 
     <!-- Main Theme Js -->
-    <script src="assets/js/main.js"></script>
+    <script src="{{asset('assets/js/main.js')}}"></script>
 
     <!-- Bootstrap Css -->
-    <link id="style" href="assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link id="style" href="{{asset('assets/libs/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
 
     <!-- Style Css -->
-    <link href="assets/css/styles.css" rel="stylesheet">
+    <link href="{{asset('assets/css/styles.css')}}" rel="stylesheet">
 
     <!-- Icons Css -->
-    <link href="assets/css/icons.css" rel="stylesheet">
+    <link href="{{asset('assets/css/icons.css')}}" rel="stylesheet">
 
     <!-- Node Waves Css -->
-    <link href="assets/libs/node-waves/waves.min.css" rel="stylesheet">
+    <link href="{{asset('assets/libs/node-waves/waves.min.css')}}" rel="stylesheet">
 
     <!-- Simplebar Css -->
-    <link href="assets/libs/simplebar/simplebar.min.css" rel="stylesheet">
+    <link href="{{asset('assets/libs/simplebar/simplebar.min.css')}}" rel="stylesheet">
 
     <!-- Color Picker Css -->
-    <link rel="stylesheet" href="assets/libs/flatpickr/flatpickr.min.css">
-    <link rel="stylesheet" href="assets/libs/@simonwep/pickr/themes/nano.min.css">
+    <link rel="stylesheet" href="{{asset('assets/libs/flatpickr/flatpickr.min.css')}}">
+    <link rel="stylesheet" href="{{asset('assets/libs/@simonwep/pickr/themes/nano.min.css')}}">
 
     <!-- Choices Css -->
-    <link rel="stylesheet" href="assets/libs/choices.js/public/assets/styles/choices.min.css">
+    <link rel="stylesheet" href="{{asset('assets/libs/choices.js/public/assets/styles/choices.min.css')}}">
 
     <!-- FlatPickr CSS -->
-    <link rel="stylesheet" href="assets/libs/flatpickr/flatpickr.min.css">
+    <link rel="stylesheet" href="{{asset('assets/libs/flatpickr/flatpickr.min.css')}}">
 
-    <link rel="stylesheet" href="assets/libs/prismjs/themes/prism-coy.min.css">
+    <link rel="stylesheet" href="{{asset('assets/libs/prismjs/themes/prism-coy.min.css')}}">
 
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="{{asset('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css')}}" rel="stylesheet">
 
     <!-- Auto Complete CSS -->
-    <link rel="stylesheet" href="assets/libs/@tarekraafat/autocomplete.js/css/autoComplete.css">
+    <link rel="stylesheet" href="{{asset('assets/libs/@tarekraafat/autocomplete.js/css/autoComplete.css')}}">
 
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="{{asset('https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css')}}">
+    <link rel="stylesheet" href="{{asset('https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{asset('https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css')}}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
@@ -153,17 +153,17 @@
                     <div class="header-element">
                         <div class="horizontal-logo">
                             <a href="index.html" class="header-logo">
-                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
                                     style="mix-blend-mode:color-burn" class="desktop-logo">
-                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
                                     style="mix-blend-mode:color-burn" class="toggle-dark">
-                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
                                     style="mix-blend-mode:color-burn" class="desktop-dark">
-                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
                                     style="mix-blend-mode:color-burn" class="toggle-logo">
-                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
                                     style="mix-blend-mode:color-burn" class="toggle-white">
-                                <img src="assets/images/brand-logos/florist.png" alt="logo"
+                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
                                     style="mix-blend-mode:color-burn" class="desktop-white">
                             </a>
                         </div>
@@ -188,7 +188,7 @@
                             data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                             <div class="d-flex align-items-center">
                                 <div>
-                                    <img src="assets/images/faces/user.jpg" alt="img" class="avatar avatar-sm">
+                                    <img src="{{asset('assets/images/faces/user.jpg')}}" alt="img" class="avatar avatar-sm">
                                 </div>
                             </div>
                         </a>
@@ -222,8 +222,8 @@
             <!-- Start::main-sidebar-header -->
             <div class="main-sidebar-header">
                 <a class="header-logo">
-                    <img src="assets/images/brand-logos/florist.png" alt="logo" class="desktop-dark ttmain">
-                    <img src="assets/images/brand-logos/florist.png" alt="logo" class="toggle-dark">
+                    <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo" class="desktop-dark ttmain">
+                    <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo" class="toggle-dark">
                 </a>
             </div>
             <!-- End::main-sidebar-header -->
@@ -260,13 +260,6 @@
                                 class="side-menu__item {{ url()->current() == route('visits') ? 'active' : '' }}">
                                 <i class="bi bi-person w-7 h-7 side-menu__icon"></i>
                                 <span class="side-menu__label">Visits</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('appointments') }}"
-                                class="side-menu__item {{ url()->current() == route('appointments') ? 'active' : '' }}">
-                                <i class="bi bi-plus w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Show Appointment</span>
                             </a>
                         </li>
                         <li class="slide">
@@ -343,36 +336,36 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     <!-- Popper JS -->
-    <script src="assets/libs/@popperjs/core/umd/popper.min.js"></script>
+    <script src="{{asset('assets/libs/@popperjs/core/umd/popper.min.js')}}"></script>
 
     <!-- Prism JS -->
-    <script src="assets/libs/prismjs/prism.js"></script>
-    <script src="assets/js/prism-custom.js"></script>
+    <script src="{{asset('assets/libs/prismjs/prism.js')}}"></script>
+    <script src="{{asset('assets/js/prism-custom.js')}}"></script>
 
     <!-- Bootstrap JS -->
-    <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="{{asset('assets/libs/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
 
     <!-- Defaultmenu JS -->
-    <script src="assets/js/defaultmenu.min.js"></script>
+    <script src="{{asset('assets/js/defaultmenu.min.js')}}"></script>
 
     <!-- Node Waves JS-->
-    <script src="assets/libs/node-waves/waves.min.js"></script>
+    <script src="{{asset('assets/libs/node-waves/waves.min.js')}}"></script>
 
     <!-- Sticky JS -->
-    <script src="assets/js/sticky.js"></script>
+    <script src="{{asset('assets/js/sticky.js')}}"></script>
 
     <!-- Simplebar JS -->
-    <script src="assets/libs/simplebar/simplebar.min.js"></script>
-    <script src="assets/js/simplebar.js"></script>
+    <script src="{{asset('assets/libs/simplebar/simplebar.min.js')}}"></script>
+    <script src="{{asset('assets/js/simplebar.js')}}"></script>
 
     <!-- Auto Complete JS -->
-    <script src="assets/libs/@tarekraafat/autocomplete.js/autoComplete.min.js"></script>
+    <script src="{{asset('assets/libs/@tarekraafat/autocomplete.js/autoComplete.min.js')}}"></script>
 
     <!-- Color Picker JS -->
-    <script src="assets/libs/@simonwep/pickr/pickr.es5.min.js"></script>
+    <script src="{{asset('assets/libs/@simonwep/pickr/pickr.es5.min.js')}}"></script>
 
     <!-- Date & Time Picker JS -->
-    <script src="assets/libs/flatpickr/flatpickr.min.js"></script>
+    <script src="{{asset('assets/libs/flatpickr/flatpickr.min.js')}}"></script>
 
     <!-- Datatables Cdn -->
     <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
@@ -386,12 +379,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- Internal Datatables JS -->
-    <script src="assets/js/datatables.js"></script>
+    <script src="{{asset('assets/js/datatables.js')}}"></script>
     <!-- Select2 Cdn -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Internal Select-2.js -->
-    <script src="assets/js/select2.js"></script>
+    <script src="{{asset('assets/js/select2.js')}}"></script>
 
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">

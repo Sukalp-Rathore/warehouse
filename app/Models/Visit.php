@@ -29,6 +29,25 @@ class Visit extends Model
         'injection_price',
         'visit_fee',
         'total_charge',
-        'is_followup'
+        'is_followup',
+        // Treatment fields
+        'treatment_details',
+        'treatment_duration',
+        'treatment_cost',
+        'next_visit_date',
+        'treatment_notes',
+        // Session and Visit Fee fields
+        'sessions',
+        'visit_fees_added',
+        'total_cost',
+        // Treatment completion fields
+        'treatment_status',
+        'treatment_completion_date',
+        'treatment_completion_notes',
+        // Payment fields (embedded)
+        'total_paid',
+        'remaining_balance',
+        'payment_status',
+        'payments'
     ];
 }

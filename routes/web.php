@@ -17,9 +17,9 @@ Route::middleware(['web'])->group(function () {
 
 Route::middleware(['web' ,'auth'])->group(function () {
     Route::get('/', function () {
-        return view('dashboard');
+        return redirect()->route('dashboard');
     });
-    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // Patient Routes 
     Route::get('/patients', [PatientController::class, 'index'])->name('patients');
     Route::post('/patients/create', [PatientController::class, 'create'])->name('patient.create');
@@ -31,6 +31,19 @@ Route::middleware(['web' ,'auth'])->group(function () {
     Route::post('/visits-create', [VisitController::class, 'create'])->name('visit.create');
     Route::post('/visit-edit', [VisitController::class, 'edit'])->name('visit.show.edit');
     Route::post('/visit-delete', [VisitController::class, 'delete'])->name('visit.delete');
+    // Treatment Routes
+    Route::get('/visits/{id}/treatment', [VisitController::class, 'showTreatment'])->name('visits.treatment');
+    Route::post('/visits/{id}/treatment', [VisitController::class, 'updateTreatment'])->name('visits.treatment.update');
+    // Payment Routes
+    Route::get('/visits/{id}/payments', [VisitController::class, 'showPayments'])->name('visits.payments');
+    Route::post('/visits/{id}/payments', [VisitController::class, 'addPayment'])->name('visits.payment.add');
+    // Invoice Route
+    Route::get('/visits/{id}/invoice', [VisitController::class, 'invoice'])->name('visits.invoice');
+    // Session Routes
+    Route::get('/visits/{id}/sessions', [VisitController::class, 'show'])->name('visits.sessions');
+    Route::post('/visits/{id}/sessions', [VisitController::class, 'addSession'])->name('visits.session.add');
+    // Treatment Completion Route
+    Route::post('/visits/{id}/complete-treatment', [VisitController::class, 'completeTreatment'])->name('visits.complete.treatment');
     // Appointment Routes
     Route::get('/appointments', [AppointmentController::class, 'show'])->name('appointments');
     Route::get('/create-appointment' , [AppointmentController::class, 'index'])->name('create.appointment');

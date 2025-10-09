@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mongodb'),
+    'default' => env('DB_CONNECTION', 'master'),
 
     /*
     |--------------------------------------------------------------------------
@@ -30,6 +30,18 @@ return [
     */
 
     'connections' => [
+
+        'master' => [
+            'driver' => 'mongodb',
+            'dsn' => env('MASTER_DB_DSN'),
+            'database' => env('MASTER_DB_DATABASE', 'wms-admin'),
+        ],
+
+        'tenant' => [
+            'driver' => 'mongodb',
+            'dsn' => env('TENANT_DB_DSN'),
+            'database' => null, // Will be set dynamically
+        ],
 
         'sqlite' => [
             'driver' => 'sqlite',

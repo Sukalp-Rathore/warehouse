@@ -10,7 +10,45 @@ Route::middleware(['web'])->group(function () {
     Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 });
 
-Route::middleware(['web' ,'auth'])->group(function () {
+// Test route without middleware
+Route::get('/test-auth', function () {
+    return response()->json([
+        'auth_check' => session('authenticated', false),
+        'user' => session('user'),
+        'session_data' => session()->all()
+    ]);
+});
+
+// Test dashboard without middleware
+Route::get('/test-dashboard', function () {
+    $user = session('user');
+    
+    $tenantInfo = [
+        'type' => session('tenant_type'),
+        'client_id' => session('client_id'),
+        'database' => session('database_name'),
+        'user' => $user,
+        'auth_check' => session('authenticated', false),
+        'session_data' => session()->all()
+    ];
+    
+    return view('dashboard', compact('tenantInfo'));
+});
+
+// Test session setting
+Route::get('/test-session', function () {
+    session(['test_data' => 'Hello World']);
+    session(['authenticated' => true]);
+    session(['user' => ['name' => 'Test User', 'email' => 'test@example.com']]);
+    session()->save();
+    
+    return response()->json([
+        'message' => 'Session data set',
+        'session_data' => session()->all()
+    ]);
+});
+
+Route::middleware(['web', 'custom_auth'])->group(function () {
     Route::get('/', function () {
         return redirect()->route('dashboard');
     });

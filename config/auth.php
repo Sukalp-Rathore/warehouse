@@ -38,7 +38,7 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'multi_tenant',
         ],
     ],
 
@@ -60,15 +60,14 @@ return [
     */
 
     'providers' => [
+        'multi_tenant' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\MultiTenantUser::class,
+        ],
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*

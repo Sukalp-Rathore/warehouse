@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+            'custom_auth' => \App\Http\Middleware\CustomAuth::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Integration::handles($exceptions);

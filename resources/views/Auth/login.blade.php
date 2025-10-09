@@ -125,9 +125,9 @@
                                     @csrf
                                     <div class="row gy-3">
                                         <div class="col-xl-12 form-group">
-                                            <label for="username" class="form-label text-default">User Name</label>
-                                            <input type="text" class="form-control" id="username" name="username"
-                                                placeholder="User name" autocomplete="off">
+                                            <label for="email" class="form-label text-default">Email Address</label>
+                                            <input type="email" class="form-control" id="email" name="email"
+                                                placeholder="Email address" autocomplete="off">
                                         </div>
                                         <div class="col-xl-12 form-group">
                                             <label for="password"
@@ -193,11 +193,25 @@
                 success: function(response) {
                     if (response.success) {
                         toastr.success(response.message);
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        } else {
+                            window.location.href = "{{ route('dashboard') }}";
+                        }
+                    } else {
                         window.location.href = "{{ route('dashboard') }}";
                     }
                 },
                 error: function(response) {
-                    if (response.responseJSON && response.responseJSON.error) {
+                    if (response.responseJSON && response.responseJSON.errors) {
+                        // Handle validation errors
+                        var errors = response.responseJSON.errors;
+                        for (var field in errors) {
+                            if (errors.hasOwnProperty(field)) {
+                                toastr.error(errors[field][0]);
+                            }
+                        }
+                    } else if (response.responseJSON && response.responseJSON.error) {
                         toastr.error(response.responseJSON.error);
                     } else {
                         toastr.error("An unexpected error occurred.");

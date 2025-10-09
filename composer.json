@@ -10,7 +10,8 @@
         "guzzlehttp/guzzle": "^7.9",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "mongodb/laravel-mongodb": "^5.4"
+        "mongodb/laravel-mongodb": "^5.4",
+        "sentry/sentry-laravel": "^4.16"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

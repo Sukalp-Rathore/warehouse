@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Appointment extends Model
 {
     //
-    use HasFactory;
     protected $collection = 'appointments';
     protected $fillable = [
         'patient_name',
-        'patient_contact',
-        'date',
-        'timeslot',
+        'appointment_date',
+        'insurer',
+        'policy_number',
+        'visit_cost',
         'status'
     ];
 }

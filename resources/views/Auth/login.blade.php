@@ -8,9 +8,9 @@
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title> Health </title>
-    <meta name="Description" content="Health">
-    <meta name="Author" content="Health">
+    <title> WMS </title>
+    <meta name="Description" content="WMS">
+    <meta name="Author" content="WMS">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="keywords"
         content="admin,admin dashboard,admin panel,admin template,bootstrap,clean,dashboard,flat,jquery,modern,responsive,premium admin templates,responsive admin,ui,ui kit.">
@@ -114,8 +114,7 @@
         <div class="col-xxl-6 col-xl-7">
             <div class="row justify-content-center align-items-center h-100">
                 <div class="col-xxl-8 col-xl-9 col-lg-6 col-md-6 col-sm-8 col-12">
-                    <img src="assets/images/brand-logos/florist.png" alt=""
-                        class="authentication-brand desktop-white mb-3 log-logo">
+                    <span style="font-size: 20px; font-weight: bold;color:black">WMS</span>
                     <div class="card custom-card my-auto border">
                         <div class="card-body p-5">
                             <p class="h3 mb-3 text-center">Log into your account</p>
@@ -156,10 +155,10 @@
             <div class="authentication-cover overflow-hidden">
                 <div class="aunthentication-cover-content d-flex align-items-center justify-content-center">
                     <div>
-                        <h1 class="text-fixed-white mb-1 fw-medium" style="font-size:2.3rem">HEALTH!
+                        <h1 class="text-fixed-white mb-1 fw-medium" style="font-size:2.3rem">WMS!
                         </h1>
-                        <h6 class="text-fixed-white mb-3">Health management system.</h6>
-                        <p class="text-fixed-white mb-1 op-6">Health Industry Solutions</p>
+                        <h6 class="text-fixed-white mb-3">WMS management system.</h6>
+                        <p class="text-fixed-white mb-1 op-6">WMS Industry Solutions</p>
                     </div>
                 </div>
             </div>

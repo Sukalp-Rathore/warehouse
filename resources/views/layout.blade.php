@@ -8,11 +8,11 @@
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Health</title>
-    <meta name="Description" content="Health">
-    <meta name="Author" content="Health">
+    <title>WMS</title>
+    <meta name="Description" content="WMS">
+    <meta name="Author" content="WMS">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="keywords" content="Health">
+    <meta name="keywords" content="WMS">
 
     <!-- Favicon -->
     <link rel="icon" href="assets/images/brand-logos/1.png" type="image/x-icon">
@@ -152,19 +152,8 @@
                     <!-- Start::header-element -->
                     <div class="header-element">
                         <div class="horizontal-logo">
-                            <a href="index.html" class="header-logo">
-                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
-                                    style="mix-blend-mode:color-burn" class="desktop-logo">
-                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
-                                    style="mix-blend-mode:color-burn" class="toggle-dark">
-                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
-                                    style="mix-blend-mode:color-burn" class="desktop-dark">
-                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
-                                    style="mix-blend-mode:color-burn" class="toggle-logo">
-                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
-                                    style="mix-blend-mode:color-burn" class="toggle-white">
-                                <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo"
-                                    style="mix-blend-mode:color-burn" class="desktop-white">
+                            <a href="{{ route('dashboard') }}" class="header-logo" style="font-size: 20px; font-weight: bold;color:white">
+                                WMS
                             </a>
                         </div>
                     </div>
@@ -221,9 +210,8 @@
 
             <!-- Start::main-sidebar-header -->
             <div class="main-sidebar-header">
-                <a class="header-logo">
-                    <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo" class="desktop-dark ttmain">
-                    <img src="{{asset('assets/images/brand-logos/florist.png')}}" alt="logo" class="toggle-dark">
+                <a class="header-logo" style="font-size: 20px; font-weight: bold;color:white">
+                    WMS
                 </a>
             </div>
             <!-- End::main-sidebar-header -->
@@ -246,34 +234,6 @@
                                 class="side-menu__item {{ url()->current() == route('dashboard') ? 'active' : '' }}">
                                 <i class="bi bi-bar-chart-fill w-7 h-7 side-menu__icon"></i>
                                 <span class="side-menu__label">Dashboard</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('patients') }}"
-                                class="side-menu__item {{ url()->current() == route('patients') ? 'active' : '' }}">
-                                <i class="bi bi-person w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Patients</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('visits') }}"
-                                class="side-menu__item {{ url()->current() == route('visits') ? 'active' : '' }}">
-                                <i class="bi bi-person w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Visits</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('create.appointment') }}"
-                                class="side-menu__item {{ url()->current() == route('create.appointment') ? 'active' : '' }}">
-                                <i class="bi bi-plus w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Create Appointment</span>
-                            </a>
-                        </li>
-                        <li class="slide">
-                            <a href="{{ route('inventory') }}"
-                                class="side-menu__item  {{ url()->current() == route('inventory') ? 'active' : '' }}">
-                                <i class="bi bi-truck w-7 h-7 side-menu__icon"></i>
-                                <span class="side-menu__label">Inventory Management</span>
                             </a>
                         </li>
                         <!-- Start::slide -->
@@ -302,7 +262,7 @@
         <footer class="footer mt-auto py-3 bg-white text-center">
             <div class="container">
                 <span class="text-muted"> Copyright © <span id="year"></span> <a href="javascript:void(0);"
-                        class="text-dark fw-medium">Health</a>
+                        class="text-dark fw-medium">WMS</a>
                 </span>
             </div>
         </footer>

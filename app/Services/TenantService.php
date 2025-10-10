@@ -10,7 +10,20 @@ class TenantService
 {
     public function setTenantConnection($databaseName)
     {
+        // Set the tenant database name
         Config::set('database.connections.tenant.database', $databaseName);
+        
+        // If DSN is not set, use individual connection parameters
+        if (!env('TENANT_DB_DSN')) {
+            Config::set('database.connections.tenant.host', env('DB_HOST', '127.0.0.1'));
+            Config::set('database.connections.tenant.port', env('DB_PORT', 27017));
+            Config::set('database.connections.tenant.username', env('DB_USERNAME', ''));
+            Config::set('database.connections.tenant.password', env('DB_PASSWORD', ''));
+            Config::set('database.connections.tenant.options', [
+                'database' => env('DB_AUTHENTICATION_DATABASE', 'admin'),
+            ]);
+        }
+        
         DB::purge('tenant');
         DB::reconnect('tenant');
     }

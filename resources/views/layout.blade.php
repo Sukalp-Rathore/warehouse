@@ -236,7 +236,17 @@
                                 <span class="side-menu__label">Dashboard</span>
                             </a>
                         </li>
+                        <!-- End::slide -->
+                        
                         <!-- Start::slide -->
+                        <li class="slide">
+                            <a href="{{ route('tenant.list') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant') ? 'active' : '' }}">
+                                <i class="bi bi-building w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Tenant Management</span>
+                            </a>
+                        </li>
+                        <!-- End::slide -->
                     </ul>
                     <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"
                             width="24" height="24" viewBox="0 0 24 24">

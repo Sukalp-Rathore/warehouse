@@ -238,7 +238,8 @@
                         </li>
                         <!-- End::slide -->
                         
-                        <!-- Start::slide -->
+                        <!-- Start::slide - Tenant Management (Only for Master Admins) -->
+                        @if(session('authenticated') && session('tenant_type') === 'master' && isset(session('user')['role']) && in_array(session('user')['role'], ['admin', 'super_admin']))
                         <li class="slide">
                             <a href="{{ route('tenant.list') }}"
                                 class="side-menu__item {{ str_contains(url()->current(), '/tenant') ? 'active' : '' }}">
@@ -246,6 +247,7 @@
                                 <span class="side-menu__label">Tenant Management</span>
                             </a>
                         </li>
+                        @endif
                         <!-- End::slide -->
                     </ul>
                     <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"

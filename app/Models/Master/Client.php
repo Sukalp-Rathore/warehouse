@@ -16,6 +16,7 @@ class Client extends Model
         'client_id',
         'name',
         'email',
+        'hashed_email',
         'database_name',
         'status',
         'subscription_plan',

@@ -13,6 +13,14 @@
                 <p><strong>User Data:</strong> {{ isset($tenantInfo['user']) ? 'Yes' : 'No' }}</p>
                 <p><strong>Auth Check:</strong> {{ $tenantInfo['auth_check'] ?? 'Not set' }}</p>
                 <p><strong>Tenant Type:</strong> {{ $tenantInfo['type'] ?? 'Not set' }}</p>
+                <p><strong>User Role:</strong> {{ $tenantInfo['user']['role'] ?? 'Not set' }}</p>
+                <p><strong>Can Access Tenant Management:</strong> 
+                    @if(isset($tenantInfo['type']) && $tenantInfo['type'] === 'master' && isset($tenantInfo['user']['role']) && in_array($tenantInfo['user']['role'], ['admin', 'super_admin']))
+                        <span class="badge badge-success">YES</span>
+                    @else
+                        <span class="badge badge-danger">NO</span>
+                    @endif
+                </p>
             </div>
             
             <!-- Debug Information Card -->
@@ -142,6 +150,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Master Admin Controls - Only visible to master admin users -->
+            @if(isset($tenantInfo['type']) && $tenantInfo['type'] === 'master' && isset($tenantInfo['user']['role']) && in_array($tenantInfo['user']['role'], ['admin', 'super_admin']))
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="ri-settings-3-line me-2"></i>Master Admin Controls
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <a href="{{ route('tenant.onboard') }}" class="btn btn-success btn-lg">
+                                    <i class="ri-add-circle-line me-2"></i>Create New Tenant
+                                </a>
+                                <a href="{{ route('tenant.list') }}" class="btn btn-info btn-lg">
+                                    <i class="ri-list-check me-2"></i>Manage Tenants
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info mb-0">
+                                <h6 class="alert-heading">Master Admin Access</h6>
+                                <p class="mb-0">You have full access to tenant management features. You can create, view, edit, and delete tenant configurations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- Quick Stats -->
             <div class="row">

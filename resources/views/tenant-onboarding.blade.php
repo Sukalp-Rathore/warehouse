@@ -84,6 +84,41 @@
                         </div>
                     </div>
 
+                    {{-- ADMIN USER CREATION --}}
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-success text-white fw-semibold">
+                            <i class="fas fa-user-shield me-2"></i>Admin User Account
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Important:</strong> This will be the admin account for this tenant. The admin will use these credentials to log into the system.
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Admin Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="admin_name" placeholder="John Doe" required>
+                                    <div class="invalid-feedback">Please provide the admin's full name.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Admin Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" name="admin_email" placeholder="admin@company.com" required>
+                                    <div class="invalid-feedback">Please provide a valid admin email address.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Admin Password <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" name="admin_password" placeholder="Enter secure password" minlength="8" required>
+                                    <div class="invalid-feedback">Password must be at least 8 characters long.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" name="admin_password_confirmation" placeholder="Confirm password" minlength="8" required>
+                                    <div class="invalid-feedback">Passwords must match.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- PLANT DETAILS --}}
                     <div class="card mb-4 shadow-sm">
                         <div class="card-header bg-primary text-white fw-semibold">
@@ -329,6 +364,19 @@
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
                 
+                // Custom password confirmation validation
+                const password = document.querySelector('input[name="admin_password"]').value;
+                const confirmPassword = document.querySelector('input[name="admin_password_confirmation"]').value;
+                
+                if (password !== confirmPassword) {
+                    const confirmPasswordField = document.querySelector('input[name="admin_password_confirmation"]');
+                    confirmPasswordField.setCustomValidity('Passwords do not match');
+                    confirmPasswordField.reportValidity();
+                    return;
+                } else {
+                    document.querySelector('input[name="admin_password_confirmation"]').setCustomValidity('');
+                }
+                
                 if (!form.checkValidity()) {
                     event.stopPropagation();
                     form.classList.add('was-validated');
@@ -413,6 +461,57 @@
                     warehouseCodeInput.value = 'WH' + code;
                 }
             });
+
+            // Password confirmation real-time validation
+            const passwordInput = document.querySelector('input[name="admin_password"]');
+            const confirmPasswordInput = document.querySelector('input[name="admin_password_confirmation"]');
+            
+            confirmPasswordInput.addEventListener('input', function() {
+                if (this.value !== passwordInput.value) {
+                    this.setCustomValidity('Passwords do not match');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+
+            // Password strength indicator
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const strength = getPasswordStrength(password);
+                const strengthText = document.getElementById('password-strength') || createPasswordStrengthIndicator();
+                
+                strengthText.textContent = strength.text;
+                strengthText.className = `form-text ${strength.class}`;
+            });
+
+            function createPasswordStrengthIndicator() {
+                const strengthDiv = document.createElement('div');
+                strengthDiv.id = 'password-strength';
+                strengthDiv.className = 'form-text';
+                passwordInput.parentNode.appendChild(strengthDiv);
+                return strengthDiv;
+            }
+
+            function getPasswordStrength(password) {
+                if (password.length < 8) {
+                    return { text: 'Password must be at least 8 characters long', class: 'text-danger' };
+                }
+                
+                let score = 0;
+                if (password.length >= 8) score++;
+                if (/[a-z]/.test(password)) score++;
+                if (/[A-Z]/.test(password)) score++;
+                if (/[0-9]/.test(password)) score++;
+                if (/[^A-Za-z0-9]/.test(password)) score++;
+                
+                if (score < 3) {
+                    return { text: 'Weak password', class: 'text-danger' };
+                } else if (score < 4) {
+                    return { text: 'Medium strength password', class: 'text-warning' };
+                } else {
+                    return { text: 'Strong password', class: 'text-success' };
+                }
+            }
         });
     </script>
 </body>

@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
             'custom_auth' => \App\Http\Middleware\CustomAuth::class,
+            'master_admin' => \App\Http\Middleware\MasterAdminOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

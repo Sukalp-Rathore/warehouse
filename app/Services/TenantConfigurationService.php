@@ -63,15 +63,8 @@ class TenantConfigurationService
             // Get the MongoDB database instance
             $database = $connection->getMongoDB();
             
-            // Users collection
-            $database->users->insertOne([
-                'name' => 'Admin User',
-                'email' => $settings->tenant_email,
-                'role' => 'admin',
-                'permissions' => ['*'],
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+            // Users collection - will be populated by createTenantAdminUser()
+            // No default admin user created here to avoid duplicates
 
             // Warehouses collection
             $database->warehouses->insertOne([
@@ -131,23 +124,14 @@ class TenantConfigurationService
      */
     private function createDefaultUsers(TenantSettings $settings)
     {
-        $connection = DB::connection('tenant');
-        $database = $connection->getMongoDB();
+        // Admin user will be created by TenantOnboardingController::createTenantAdminUser()
+        // This method is kept for potential future use but doesn't create admin users
         
-        // Create admin user
-        $database->users->insertOne([
-            'name' => 'System Administrator',
-            'email' => $settings->tenant_email,
-            'password' => bcrypt('admin123'), // Default password
-            'role' => 'admin',
-            'permissions' => ['*'],
-            'status' => 'active',
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-
         // Create warehouse manager if specified in roles
         if (!empty($settings->roles_permissions['roles_json'])) {
+            $connection = DB::connection('tenant');
+            $database = $connection->getMongoDB();
+            
             $roles = json_decode($settings->roles_permissions['roles_json'], true);
             if (is_array($roles)) {
                 foreach ($roles as $role) {

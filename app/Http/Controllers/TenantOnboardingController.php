@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\Master\Client;
 use App\Models\Master\TenantSettings;
+use App\Models\Client\User as ClientUser;
 use App\Services\TenantService;
 use App\Services\TenantConfigurationService;
 
@@ -38,6 +40,9 @@ class TenantOnboardingController extends Controller
         $request->validate([
             'tenant_name' => 'required|string|max:255',
             'tenant_email' => 'required|email|max:255',
+            'admin_email' => 'required|email|max:255',
+            'admin_password' => 'required|string|min:8|confirmed',
+            'admin_name' => 'required|string|max:255',
             'timezone' => 'required|string',
             'plant_code' => 'required|string|max:50',
             'plant_name' => 'required|string|max:255',
@@ -51,11 +56,13 @@ class TenantOnboardingController extends Controller
             $clientId = 'CLT_' . strtoupper(Str::random(8));
             $databaseName = 'wms_' . strtolower(Str::slug($request->tenant_name)) . '_' . time();
 
-            // Create client record
+            // Create client record with hashed admin email for login mapping
+            $hashedAdminEmail = hash('sha256', $request->admin_email);
             $client = Client::create([
                 'client_id' => $clientId,
                 'name' => $request->tenant_name,
                 'email' => $request->tenant_email,
+                'hashed_email' => $hashedAdminEmail,
                 'database_name' => $databaseName,
                 'status' => 'active',
                 'subscription_plan' => 'basic',
@@ -72,13 +79,17 @@ class TenantOnboardingController extends Controller
             // Create tenant database and initialize with default structure
             $this->configService->createTenantDatabase($databaseName, $settings);
 
+            // Create admin user in the tenant database
+            $this->createTenantAdminUser($request, $clientId, $databaseName);
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Tenant onboarded successfully!',
+                'message' => 'Tenant onboarded successfully! Admin user created and ready to login.',
                 'client_id' => $clientId,
                 'database_name' => $databaseName,
+                'admin_email' => $request->admin_email,
                 'redirect_url' => route('tenant.list')
             ]);
 
@@ -253,5 +264,44 @@ class TenantOnboardingController extends Controller
             ],
             'status' => 'active',
         ];
+    }
+
+    /**
+     * Create admin user in tenant database
+     */
+    private function createTenantAdminUser(Request $request, $clientId, $databaseName)
+    {
+        // Switch to tenant database
+        $this->tenantService->setTenantConnection($databaseName);
+
+        // Clean up any existing admin users to ensure only one admin exists
+        $existingAdmins = ClientUser::where('role', 'admin')->get();
+        if ($existingAdmins->count() > 0) {
+            \Log::info('Cleaning up existing admin users', [
+                'count' => $existingAdmins->count(),
+                'client_id' => $clientId,
+                'database_name' => $databaseName
+            ]);
+            
+            // Delete all existing admin users
+            ClientUser::where('role', 'admin')->delete();
+        }
+
+        // Create admin user
+        ClientUser::create([
+            'email' => $request->admin_email,
+            'password' => Hash::make($request->admin_password),
+            'name' => $request->admin_name,
+            'role' => 'admin',
+            'permissions' => ['all'], // Admin has all permissions
+            'status' => 'active',
+            'client_id' => $clientId,
+        ]);
+
+        \Log::info('Tenant admin user created', [
+            'client_id' => $clientId,
+            'admin_email' => $request->admin_email,
+            'database_name' => $databaseName
+        ]);
     }
 }

@@ -35,17 +35,28 @@ class MultiTenantAuthService
             ];
         }
 
-        // 2. Check client users in each client database
-        $clients = Client::where('status', 'active')->get();
-        \Log::info('Client check', ['clients_count' => $clients->count()]);
+        // 2. Check client users using hashed email mapping (optimized approach)
+        $hashedEmail = hash('sha256', $email);
+        $client = Client::where('hashed_email', $hashedEmail)
+                       ->where('status', 'active')
+                       ->first();
         
-        foreach ($clients as $client) {
-            // Switch to client database
+        \Log::info('Client mapping check', [
+            'hashed_email' => $hashedEmail,
+            'client_found' => $client ? 'yes' : 'no',
+            'client_id' => $client ? $client->client_id : null
+        ]);
+        
+        if ($client) {
+            // Switch to the specific client database
             $this->tenantService->setTenantConnection($client->database_name);
             
             $clientUser = ClientUser::where('email', $email)->first();
             if ($clientUser && Hash::check($password, $clientUser->password)) {
-                \Log::info('Client user authentication successful', ['client_id' => $client->client_id]);
+                \Log::info('Client user authentication successful', [
+                    'client_id' => $client->client_id,
+                    'database_name' => $client->database_name
+                ]);
                 return [
                     'user' => $clientUser,
                     'tenant_type' => 'client',

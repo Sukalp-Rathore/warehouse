@@ -394,11 +394,21 @@ Route::middleware(['web', 'custom_auth'])->group(function () {
     Route::get('/', function () {
         return redirect()->route('dashboard');
     });
+});
+
+// Dashboard - Apply tenant_configured middleware (middleware will skip for master admins)
+Route::middleware(['web', 'custom_auth', 'tenant_configured'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
-// Tenant User Management Routes (Only accessible by tenant admins) - MUST BE BEFORE tenant management routes
+// Tenant Configuration Routes (Before other tenant routes to avoid middleware conflicts)
 Route::middleware(['web', 'custom_auth', 'tenant_admin_only'])->prefix('tenant')->group(function () {
+    Route::get('/configure', [App\Http\Controllers\TenantConfigurationController::class, 'show'])->name('tenant.configure');
+    Route::post('/configure', [App\Http\Controllers\TenantConfigurationController::class, 'store'])->name('tenant.configure.store');
+});
+
+// Tenant User Management Routes (Only accessible by tenant admins) - MUST BE BEFORE tenant management routes
+Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured'])->prefix('tenant')->group(function () {
     
     // User Management
     Route::get('/users', [App\Http\Controllers\TenantUserController::class, 'index'])->name('tenant.users.index');

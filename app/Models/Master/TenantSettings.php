@@ -26,6 +26,7 @@ class TenantSettings extends Model
         'reorder_alert_rules',
         'integration_settings',
         'status',
+        'configuration_completed',
         'created_at',
         'updated_at'
     ];
@@ -39,6 +40,7 @@ class TenantSettings extends Model
         'roles_permissions' => 'array',
         'reorder_alert_rules' => 'array',
         'integration_settings' => 'array',
+        'configuration_completed' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -51,5 +53,24 @@ class TenantSettings extends Model
     public function isActive()
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * Scope to get only configured tenants
+     */
+    public function scopeConfigured($query)
+    {
+        return $query->where('configuration_completed', true);
+    }
+
+    /**
+     * Scope to get tenants that need configuration
+     */
+    public function scopeNeedsConfiguration($query)
+    {
+        return $query->where(function($q) {
+            $q->where('configuration_completed', false)
+              ->orWhereNull('configuration_completed');
+        });
     }
 }

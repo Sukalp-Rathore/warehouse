@@ -264,6 +264,7 @@ class TenantOnboardingController extends Controller
                 'ai_provider' => $request->ai_provider,
             ],
             'status' => 'active',
+            'configuration_completed' => false, // Tenant admin must complete configuration on first login
         ];
     }
 

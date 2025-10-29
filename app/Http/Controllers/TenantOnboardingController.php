@@ -68,6 +68,7 @@ class TenantOnboardingController extends Controller
                 'subscription_plan' => 'basic',
                 'max_warehouses' => 5,
                 'max_users' => 10,
+                'record_type' => 'tenant', // Mark as tenant record
             ]);
 
             // Prepare tenant settings

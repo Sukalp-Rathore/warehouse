@@ -248,6 +248,33 @@
                             </a>
                         </li>
                         @endif
+
+                        @if(session('authenticated') && session('tenant_type') === 'client' && 
+                            (isset(session('user')['role']) && (strtolower(session('user')['role']) === 'admin' || strtolower(session('user')['role']) === 'administrator')) ||
+                            (isset(session('user')['permissions']) && in_array('all', session('user')['permissions'])))
+                        <!-- User Management Section for Tenant Admins -->
+                        <li class="slide">
+                            <a href="{{ route('tenant.users.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/users') ? 'active' : '' }}">
+                                <i class="bi bi-people w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">User Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.roles.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/roles') ? 'active' : '' }}">
+                                <i class="bi bi-shield-check w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Role Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.plants.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/plants') ? 'active' : '' }}">
+                                <i class="bi bi-building w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Plant Management</span>
+                            </a>
+                        </li>
+                        @endif
                         <!-- End::slide -->
                     </ul>
                     <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"

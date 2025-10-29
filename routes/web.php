@@ -19,6 +19,62 @@ Route::get('/test-auth', function () {
     ]);
 });
 
+// Debug route for tenant admin navigation
+Route::get('/debug-nav', function () {
+    $user = session('user');
+    $tenantType = session('tenant_type');
+    $authenticated = session('authenticated');
+    
+    return response()->json([
+        'authenticated' => $authenticated,
+        'tenant_type' => $tenantType,
+        'user_role' => $user['role'] ?? 'not_set',
+        'user_data' => $user,
+        'nav_condition_check' => [
+            'authenticated' => $authenticated,
+            'tenant_type_client' => $tenantType === 'client',
+            'role_exists' => isset($user['role']),
+            'role_value' => $user['role'] ?? 'not_set',
+            'role_is_admin' => ($user['role'] ?? '') === 'admin',
+            'full_condition' => $authenticated && $tenantType === 'client' && isset($user['role']) && $user['role'] === 'admin'
+        ]
+    ]);
+});
+
+// Debug route for testing role permissions
+Route::get('/debug-roles', function () {
+    $roles = \App\Models\Client\Role::all();
+    return response()->json([
+        'roles' => $roles->map(function($role) {
+            return [
+                'id' => $role->_id,
+                'name' => $role->name,
+                'permissions' => $role->permissions
+            ];
+        })
+    ]);
+})->middleware(['web', 'custom_auth', 'tenant_admin_only']);
+
+// Debug route for testing specific role
+Route::get('/debug-role/{id}', function ($id) {
+    try {
+        $role = \App\Models\Client\Role::findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'role' => [
+                'id' => $role->_id,
+                'name' => $role->name,
+                'permissions' => $role->permissions
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+})->middleware(['web', 'custom_auth', 'tenant_admin_only']);
+
 // Test dashboard without middleware
 Route::get('/test-dashboard', function () {
     $user = session('user');
@@ -339,6 +395,43 @@ Route::middleware(['web', 'custom_auth'])->group(function () {
         return redirect()->route('dashboard');
     });
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
+
+// Tenant User Management Routes (Only accessible by tenant admins) - MUST BE BEFORE tenant management routes
+Route::middleware(['web', 'custom_auth', 'tenant_admin_only'])->prefix('tenant')->group(function () {
+    
+    // User Management
+    Route::get('/users', [App\Http\Controllers\TenantUserController::class, 'index'])->name('tenant.users.index');
+    Route::get('/users/create', [App\Http\Controllers\TenantUserController::class, 'create'])->name('tenant.users.create');
+    Route::post('/users', [App\Http\Controllers\TenantUserController::class, 'store'])->name('tenant.users.store');
+    Route::get('/users/{id}', [App\Http\Controllers\TenantUserController::class, 'show'])->name('tenant.users.show');
+    Route::get('/users/{id}/edit', [App\Http\Controllers\TenantUserController::class, 'edit'])->name('tenant.users.edit');
+    Route::put('/users/{id}', [App\Http\Controllers\TenantUserController::class, 'update'])->name('tenant.users.update');
+    Route::delete('/users/{id}', [App\Http\Controllers\TenantUserController::class, 'destroy'])->name('tenant.users.destroy');
+    Route::patch('/users/{id}/toggle-status', [App\Http\Controllers\TenantUserController::class, 'toggleStatus'])->name('tenant.users.toggle-status');
+    
+    // Role Management
+    Route::resource('roles', App\Http\Controllers\TenantRoleController::class)->names([
+        'index' => 'tenant.roles.index',
+        'create' => 'tenant.roles.create',
+        'store' => 'tenant.roles.store',
+        'show' => 'tenant.roles.show',
+        'edit' => 'tenant.roles.edit',
+        'update' => 'tenant.roles.update',
+        'destroy' => 'tenant.roles.destroy'
+    ]);
+    Route::get('/roles/{id}/permissions', [App\Http\Controllers\TenantRoleController::class, 'getPermissions'])->name('tenant.roles.permissions')->middleware(['web', 'custom_auth', 'tenant_admin_only']);
+    
+    // Plant Management  
+    Route::resource('plants', App\Http\Controllers\TenantPlantController::class)->names([
+        'index' => 'tenant.plants.index',
+        'create' => 'tenant.plants.create',
+        'store' => 'tenant.plants.store',
+        'show' => 'tenant.plants.show',
+        'edit' => 'tenant.plants.edit',
+        'update' => 'tenant.plants.update',
+        'destroy' => 'tenant.plants.destroy'
+    ]);
 });
 
 // Tenant Management Routes - Only accessible to master admin users

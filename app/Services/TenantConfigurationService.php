@@ -99,20 +99,8 @@ class TenantConfigurationService
                 'updated_at' => now()
             ]);
 
-            // Roles collection
-            if (!empty($settings->roles_permissions['roles_json'])) {
-                $roles = json_decode($settings->roles_permissions['roles_json'], true);
-                if (is_array($roles)) {
-                    foreach ($roles as $role) {
-                        $database->roles->insertOne([
-                            'role_name' => $role['role'],
-                            'permissions' => $role['permissions'],
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    }
-                }
-            }
+            // Create default roles using our new Role model
+            $this->createDefaultRoles($database);
         } catch (\Exception $e) {
             \Log::error('Failed to create default collections: ' . $e->getMessage());
             throw $e;
@@ -208,6 +196,68 @@ class TenantConfigurationService
     public function getTenantConfiguration($clientId)
     {
         return TenantSettings::where('client_id', $clientId)->first();
+    }
+
+    /**
+     * Create default roles for the tenant
+     */
+    private function createDefaultRoles($database)
+    {
+        $defaultRoles = [
+            [
+                'name' => 'Admin',
+                'description' => 'Full system access',
+                'permissions' => [
+                    'warehouse.view', 'warehouse.create', 'warehouse.edit', 'warehouse.delete',
+                    'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete',
+                    'reports.view', 'reports.export',
+                    'users.view', 'users.create', 'users.edit', 'users.delete',
+                    'settings.view', 'settings.edit'
+                ],
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'name' => 'Manager',
+                'description' => 'Warehouse management access',
+                'permissions' => [
+                    'warehouse.view', 'warehouse.create', 'warehouse.edit',
+                    'inventory.view', 'inventory.create', 'inventory.edit',
+                    'reports.view', 'reports.export'
+                ],
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'name' => 'Operator',
+                'description' => 'Basic warehouse operations',
+                'permissions' => [
+                    'warehouse.view',
+                    'inventory.view', 'inventory.create', 'inventory.edit'
+                ],
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'name' => 'Viewer',
+                'description' => 'Read-only access',
+                'permissions' => [
+                    'warehouse.view',
+                    'inventory.view',
+                    'reports.view'
+                ],
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]
+        ];
+
+        foreach ($defaultRoles as $roleData) {
+            $database->roles->insertOne($roleData);
+        }
     }
 
     /**

@@ -35,15 +35,52 @@ class MultiTenantAuthService
             ];
         }
 
-        // 2. Check client users using hashed email mapping (optimized approach)
+        // 2. Check client users using separate user records
         $hashedEmail = hash('sha256', $email);
+        
+        // First, try to find a user record (record_type='user')
+        $userMapping = Client::where('hashed_email', $hashedEmail)
+                            ->where('record_type', 'user')
+                            ->where('status', 'active')
+                            ->first();
+        
+        \Log::info('User mapping check', [
+            'hashed_email' => $hashedEmail,
+            'user_mapping_found' => $userMapping ? 'yes' : 'no',
+            'client_id' => $userMapping ? $userMapping->client_id : null
+        ]);
+        
+        if ($userMapping) {
+            // Switch to the specific client database
+            $this->tenantService->setTenantConnection($userMapping->database_name);
+            
+            $clientUser = ClientUser::where('email', $email)->first();
+            if ($clientUser && Hash::check($password, $clientUser->password)) {
+                \Log::info('Client user authentication successful', [
+                    'client_id' => $userMapping->client_id,
+                    'database_name' => $userMapping->database_name,
+                    'user_id' => $userMapping->user_id
+                ]);
+                return [
+                    'user' => $clientUser,
+                    'tenant_type' => 'client',
+                    'client_id' => $userMapping->client_id,
+                    'database_name' => $userMapping->database_name
+                ];
+            }
+        }
+        
+        // 3. Fallback: Check legacy tenant-level mapping (for existing admin users)
         $client = Client::where('hashed_email', $hashedEmail)
+                       ->where(function($q) {
+                           $q->whereNull('record_type')->orWhere('record_type', 'tenant');
+                       })
                        ->where('status', 'active')
                        ->first();
         
-        \Log::info('Client mapping check', [
+        \Log::info('Legacy tenant mapping check', [
             'hashed_email' => $hashedEmail,
-            'client_found' => $client ? 'yes' : 'no',
+            'tenant_found' => $client ? 'yes' : 'no',
             'client_id' => $client ? $client->client_id : null
         ]);
         
@@ -53,7 +90,7 @@ class MultiTenantAuthService
             
             $clientUser = ClientUser::where('email', $email)->first();
             if ($clientUser && Hash::check($password, $clientUser->password)) {
-                \Log::info('Client user authentication successful', [
+                \Log::info('Legacy tenant user authentication successful', [
                     'client_id' => $client->client_id,
                     'database_name' => $client->database_name
                 ]);

@@ -274,6 +274,55 @@
                                 <span class="side-menu__label">Plant Management</span>
                             </a>
                         </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.warehouses.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/warehouses') ? 'active' : '' }}">
+                                <i class="bi bi-archive w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Warehouse Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.storage-types.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/storage-types') ? 'active' : '' }}">
+                                <i class="bi bi-layers w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Storage Types</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.sections.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/sections') ? 'active' : '' }}">
+                                <i class="bi bi-grid w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Sections</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.bins.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/bins') ? 'active' : '' }}">
+                                <i class="bi bi-box w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Bin Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.vendors.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/vendors') ? 'active' : '' }}">
+                                <i class="bi bi-truck w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Vendor Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.categories.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/categories') ? 'active' : '' }}">
+                                <i class="bi bi-folder w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Item Categories</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.items.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/items') ? 'active' : '' }}">
+                                <i class="bi bi-box-seam w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Item Master</span>
+                            </a>
+                        </li>
                         @endif
                         <!-- End::slide -->
                     </ul>

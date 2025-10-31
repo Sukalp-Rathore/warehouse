@@ -442,6 +442,74 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
         'update' => 'tenant.plants.update',
         'destroy' => 'tenant.plants.destroy'
     ]);
+    
+    // Warehouse Management
+    Route::resource('warehouses', App\Http\Controllers\WarehouseController::class)->names([
+        'index' => 'tenant.warehouses.index',
+        'create' => 'tenant.warehouses.create',
+        'store' => 'tenant.warehouses.store',
+        'show' => 'tenant.warehouses.show',
+        'edit' => 'tenant.warehouses.edit',
+        'update' => 'tenant.warehouses.update',
+        'destroy' => 'tenant.warehouses.destroy'
+    ]);
+    Route::patch('/warehouses/{id}/toggle-status', [App\Http\Controllers\WarehouseController::class, 'toggleStatus'])->name('tenant.warehouses.toggle-status');
+    
+    // Storage Type Management
+    Route::get('/storage-types', [App\Http\Controllers\StorageTypeController::class, 'index'])->name('tenant.storage-types.index');
+    Route::get('/storage-types/list', [App\Http\Controllers\StorageTypeController::class, 'list'])->name('tenant.storage-types.list');
+    Route::get('/storage-types/sections', [App\Http\Controllers\StorageTypeController::class, 'sections'])->name('tenant.storage-types.sections');
+    Route::post('/storage-types', [App\Http\Controllers\StorageTypeController::class, 'store'])->name('tenant.storage-types.store');
+    Route::put('/storage-types/{id}', [App\Http\Controllers\StorageTypeController::class, 'update'])->name('tenant.storage-types.update');
+    Route::delete('/storage-types/{id}', [App\Http\Controllers\StorageTypeController::class, 'destroy'])->name('tenant.storage-types.destroy');
+    
+    // Section Management
+    Route::get('/sections', [App\Http\Controllers\SectionController::class, 'index'])->name('tenant.sections.index');
+    Route::post('/sections', [App\Http\Controllers\SectionController::class, 'store'])->name('tenant.sections.store');
+    Route::put('/sections/{id}', [App\Http\Controllers\SectionController::class, 'update'])->name('tenant.sections.update');
+    Route::delete('/sections/{id}', [App\Http\Controllers\SectionController::class, 'destroy'])->name('tenant.sections.destroy');
+    
+    // Bin Management
+    Route::get('/bins', [App\Http\Controllers\BinController::class, 'index'])->name('tenant.bins.index');
+    Route::get('/bins/create', [App\Http\Controllers\BinController::class, 'create'])->name('tenant.bins.create');
+    Route::post('/bins', [App\Http\Controllers\BinController::class, 'store'])->name('tenant.bins.store');
+    Route::put('/bins/{id}', [App\Http\Controllers\BinController::class, 'update'])->name('tenant.bins.update');
+    Route::delete('/bins/{id}', [App\Http\Controllers\BinController::class, 'destroy'])->name('tenant.bins.destroy');
+    Route::post('/bins/bulk-operation', [App\Http\Controllers\BinController::class, 'bulkOperation'])->name('tenant.bins.bulk-operation');
+    
+    // Vendor Management
+    Route::resource('vendors', App\Http\Controllers\VendorController::class)->names([
+        'index' => 'tenant.vendors.index',
+        'create' => 'tenant.vendors.create',
+        'store' => 'tenant.vendors.store',
+        'show' => 'tenant.vendors.show',
+        'edit' => 'tenant.vendors.edit',
+        'update' => 'tenant.vendors.update',
+        'destroy' => 'tenant.vendors.destroy'
+    ]);
+    Route::patch('/vendors/{id}/toggle-status', [App\Http\Controllers\VendorController::class, 'toggleStatus'])->name('tenant.vendors.toggle-status');
+    
+    // Item Category Management
+    Route::get('/categories', [App\Http\Controllers\ItemCategoryController::class, 'index'])->name('tenant.categories.index');
+    Route::post('/categories', [App\Http\Controllers\ItemCategoryController::class, 'store'])->name('tenant.categories.store');
+    Route::put('/categories/{id}', [App\Http\Controllers\ItemCategoryController::class, 'update'])->name('tenant.categories.update');
+    Route::delete('/categories/{id}', [App\Http\Controllers\ItemCategoryController::class, 'destroy'])->name('tenant.categories.destroy');
+    
+    // Item Master Management
+    Route::resource('items', App\Http\Controllers\ItemController::class)->names([
+        'index' => 'tenant.items.index',
+        'create' => 'tenant.items.create',
+        'store' => 'tenant.items.store',
+        'show' => 'tenant.items.show',
+        'edit' => 'tenant.items.edit',
+        'update' => 'tenant.items.update',
+        'destroy' => 'tenant.items.destroy'
+    ]);
+    Route::get('/items/import', [App\Http\Controllers\ItemController::class, 'showImport'])->name('tenant.items.import');
+    Route::post('/items/import', [App\Http\Controllers\ItemController::class, 'import'])->name('tenant.items.import.store');
+    Route::get('/items/import/template', [App\Http\Controllers\ItemController::class, 'downloadTemplate'])->name('tenant.items.import.template');
+    Route::get('/items/export', [App\Http\Controllers\ItemController::class, 'export'])->name('tenant.items.export');
+    Route::patch('/items/{id}/toggle-status', [App\Http\Controllers\ItemController::class, 'toggleStatus'])->name('tenant.items.toggle-status');
 });
 
 // Tenant Management Routes - Only accessible to master admin users

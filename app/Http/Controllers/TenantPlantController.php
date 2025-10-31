@@ -47,20 +47,25 @@ class TenantPlantController extends Controller
                 ->withInput();
         }
 
-        Plant::create([
-            'plant_code' => $request->plant_code,
-            'plant_name' => $request->plant_name,
-            'location' => $request->location,
-            'address' => $request->address,
-            'contact_person' => $request->contact_person,
-            'contact_phone' => $request->contact_phone,
-            'contact_email' => $request->contact_email,
-            'is_active' => $request->has('is_active'),
-            'created_by' => session('user._id')
-        ]);
+        try {
+            Plant::create([
+                'plant_code' => $request->plant_code,
+                'plant_name' => $request->plant_name,
+                'location' => $request->location,
+                'address' => $request->address,
+                'contact_person' => $request->contact_person,
+                'contact_phone' => $request->contact_phone,
+                'contact_email' => $request->contact_email,
+                'is_active' => $request->has('is_active'),
+                'created_by' => session('user._id')
+            ]);
 
-        return redirect()->route('tenant.plants.index')
-            ->with('success', 'Plant created successfully.');
+            return redirect()->route('tenant.plants.index')
+                ->with('success', 'Plant created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('tenant.plants.index')
+                ->with('error', 'Plant was created, but redirect encountered an issue: ' . $e->getMessage());
+        }
     }
 
     /**

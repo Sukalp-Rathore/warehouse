@@ -476,6 +476,7 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
     Route::put('/bins/{id}', [App\Http\Controllers\BinController::class, 'update'])->name('tenant.bins.update');
     Route::delete('/bins/{id}', [App\Http\Controllers\BinController::class, 'destroy'])->name('tenant.bins.destroy');
     Route::post('/bins/bulk-operation', [App\Http\Controllers\BinController::class, 'bulkOperation'])->name('tenant.bins.bulk-operation');
+    Route::get('/bins/list', [App\Http\Controllers\BinController::class, 'list'])->name('tenant.bins.list');
     
     // Vendor Management
     Route::resource('vendors', App\Http\Controllers\VendorController::class)->names([
@@ -495,7 +496,17 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
     Route::put('/categories/{id}', [App\Http\Controllers\ItemCategoryController::class, 'update'])->name('tenant.categories.update');
     Route::delete('/categories/{id}', [App\Http\Controllers\ItemCategoryController::class, 'destroy'])->name('tenant.categories.destroy');
     
-    // Item Master Management
+    // Item Master Management - Put specific routes BEFORE resource route to avoid conflicts
+    Route::get('/items/import', [App\Http\Controllers\ItemController::class, 'showImport'])->name('tenant.items.import');
+    Route::post('/items/import', [App\Http\Controllers\ItemController::class, 'import'])->name('tenant.items.import.store');
+    Route::get('/items/import/template', [App\Http\Controllers\ItemController::class, 'downloadTemplate'])->name('tenant.items.import.template');
+    Route::get('/items/export', [App\Http\Controllers\ItemController::class, 'export'])->name('tenant.items.export');
+    
+    // Item Location Search - Must be BEFORE resource route
+    Route::get('/items/locate', [App\Http\Controllers\ItemLocationController::class, 'locate'])->name('tenant.items.locate');
+    Route::get('/items/locate/search', [App\Http\Controllers\ItemLocationController::class, 'search'])->name('tenant.items.locate.search');
+    
+    // Item resource route
     Route::resource('items', App\Http\Controllers\ItemController::class)->names([
         'index' => 'tenant.items.index',
         'create' => 'tenant.items.create',
@@ -505,11 +516,39 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
         'update' => 'tenant.items.update',
         'destroy' => 'tenant.items.destroy'
     ]);
-    Route::get('/items/import', [App\Http\Controllers\ItemController::class, 'showImport'])->name('tenant.items.import');
-    Route::post('/items/import', [App\Http\Controllers\ItemController::class, 'import'])->name('tenant.items.import.store');
-    Route::get('/items/import/template', [App\Http\Controllers\ItemController::class, 'downloadTemplate'])->name('tenant.items.import.template');
-    Route::get('/items/export', [App\Http\Controllers\ItemController::class, 'export'])->name('tenant.items.export');
+    
     Route::patch('/items/{id}/toggle-status', [App\Http\Controllers\ItemController::class, 'toggleStatus'])->name('tenant.items.toggle-status');
+    Route::get('/items/{id}/batches', [App\Http\Controllers\ItemController::class, 'getBatches'])->name('tenant.items.batches');
+    
+    // Inventory Management
+    Route::get('/inventory', [App\Http\Controllers\InventoryController::class, 'index'])->name('tenant.inventory.index');
+    Route::get('/inventory/create', [App\Http\Controllers\InventoryController::class, 'create'])->name('tenant.inventory.create');
+    Route::post('/inventory', [App\Http\Controllers\InventoryController::class, 'store'])->name('tenant.inventory.store');
+    Route::get('/inventory/{id}', [App\Http\Controllers\InventoryController::class, 'show'])->name('tenant.inventory.show');
+    Route::get('/inventory/{id}/transfer', [App\Http\Controllers\InventoryController::class, 'transferForm'])->name('tenant.inventory.transfer');
+    Route::post('/inventory/{id}/transfer', [App\Http\Controllers\InventoryController::class, 'transfer'])->name('tenant.inventory.transfer.store');
+    Route::get('/inventory/{id}/adjust', [App\Http\Controllers\InventoryController::class, 'adjustForm'])->name('tenant.inventory.adjust');
+    Route::post('/inventory/{id}/adjust', [App\Http\Controllers\InventoryController::class, 'adjust'])->name('tenant.inventory.adjust.store');
+    Route::post('/inventory/{id}/qc-hold', [App\Http\Controllers\InventoryController::class, 'qcHold'])->name('tenant.inventory.qc-hold');
+    Route::post('/inventory/{id}/qc-release', [App\Http\Controllers\InventoryController::class, 'qcRelease'])->name('tenant.inventory.qc-release');
+    
+    // GRN Management
+    Route::get('/grns', [App\Http\Controllers\GRNController::class, 'index'])->name('tenant.grns.index');
+    Route::get('/grns/create', [App\Http\Controllers\GRNController::class, 'create'])->name('tenant.grns.create');
+    Route::post('/grns', [App\Http\Controllers\GRNController::class, 'store'])->name('tenant.grns.store');
+    Route::get('/grns/{id}', [App\Http\Controllers\GRNController::class, 'show'])->name('tenant.grns.show');
+    Route::post('/grns/{id}/approve', [App\Http\Controllers\GRNController::class, 'approve'])->name('tenant.grns.approve');
+    Route::get('/grns/{id}/putaway', [App\Http\Controllers\GRNController::class, 'putaway'])->name('tenant.grns.putaway');
+    Route::post('/grns/{id}/putaway', [App\Http\Controllers\GRNController::class, 'executePutaway'])->name('tenant.grns.putaway.store');
+    Route::post('/grns/{id}/complete', [App\Http\Controllers\GRNController::class, 'complete'])->name('tenant.grns.complete');
+    
+    // Batch Management
+    Route::get('/batches', [App\Http\Controllers\BatchController::class, 'index'])->name('tenant.batches.index');
+    Route::get('/batches/{id}', [App\Http\Controllers\BatchController::class, 'show'])->name('tenant.batches.show');
+    
+    // Putaway AJAX Routes
+    Route::get('/putaway/suggest', [App\Http\Controllers\PutawayController::class, 'suggestBins'])->name('tenant.putaway.suggest');
+    Route::post('/putaway/validate', [App\Http\Controllers\PutawayController::class, 'validateBin'])->name('tenant.putaway.validate');
 });
 
 // Tenant Management Routes - Only accessible to master admin users

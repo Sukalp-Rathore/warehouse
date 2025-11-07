@@ -82,7 +82,7 @@ class ItemController extends Controller
             'item_code' => 'required|string|max:50|unique:items,item_code',
             'description' => 'required|string|max:255',
             'short_description' => 'nullable|string|max:100',
-            'category_id' => 'nullable|exists:item_categories,_id',
+            'category_id' => 'nullable',
             'category' => 'nullable|string|max:100',
             'subcategory' => 'nullable|string|max:100',
             'uom' => 'required|string|max:20',
@@ -91,9 +91,9 @@ class ItemController extends Controller
             'width' => 'nullable|numeric|min:0',
             'height' => 'nullable|numeric|min:0',
             'volume' => 'nullable|numeric|min:0',
-            'preferred_storage_type_id' => 'nullable|exists:storage_types,_id',
-            'preferred_bin_id' => 'nullable|exists:bins,_id',
-            'vendor_id' => 'nullable|exists:vendors,_id',
+            'preferred_storage_type_id' => 'nullable',
+            'preferred_bin_id' => 'nullable',
+            'vendor_id' => 'nullable',
             'alternate_vendors' => 'nullable|array',
             'minimum_order_quantity' => 'nullable|integer|min:0',
             'reorder_level' => 'nullable|integer|min:0',
@@ -106,6 +106,41 @@ class ItemController extends Controller
             'hazmat_class' => 'nullable|string|max:50',
             'temperature_controlled' => 'nullable|boolean',
         ]);
+
+        // Add custom MongoDB validation
+        $validator->after(function ($validator) use ($request) {
+            // Validate category_id if provided
+            if ($request->filled('category_id')) {
+                $category = ItemCategory::find($request->category_id);
+                if (!$category) {
+                    $validator->errors()->add('category_id', 'Selected category is invalid');
+                }
+            }
+
+            // Validate preferred_storage_type_id if provided
+            if ($request->filled('preferred_storage_type_id')) {
+                $storageType = StorageType::find($request->preferred_storage_type_id);
+                if (!$storageType) {
+                    $validator->errors()->add('preferred_storage_type_id', 'Selected preferred storage type is invalid');
+                }
+            }
+
+            // Validate vendor_id if provided
+            if ($request->filled('vendor_id')) {
+                $vendor = Vendor::find($request->vendor_id);
+                if (!$vendor) {
+                    $validator->errors()->add('vendor_id', 'Selected vendor is invalid');
+                }
+            }
+
+            // Validate preferred_bin_id if provided
+            if ($request->filled('preferred_bin_id')) {
+                $bin = \App\Models\Client\Bin::find($request->preferred_bin_id);
+                if (!$bin) {
+                    $validator->errors()->add('preferred_bin_id', 'Selected preferred bin is invalid');
+                }
+            }
+        });
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -207,7 +242,7 @@ class ItemController extends Controller
             'item_code' => 'required|string|max:50|unique:items,item_code,' . $id . ',_id',
             'description' => 'required|string|max:255',
             'short_description' => 'nullable|string|max:100',
-            'category_id' => 'nullable|exists:item_categories,_id',
+            'category_id' => 'nullable',
             'category' => 'nullable|string|max:100',
             'subcategory' => 'nullable|string|max:100',
             'uom' => 'required|string|max:20',
@@ -216,9 +251,9 @@ class ItemController extends Controller
             'width' => 'nullable|numeric|min:0',
             'height' => 'nullable|numeric|min:0',
             'volume' => 'nullable|numeric|min:0',
-            'preferred_storage_type_id' => 'nullable|exists:storage_types,_id',
-            'preferred_bin_id' => 'nullable|exists:bins,_id',
-            'vendor_id' => 'nullable|exists:vendors,_id',
+            'preferred_storage_type_id' => 'nullable',
+            'preferred_bin_id' => 'nullable',
+            'vendor_id' => 'nullable',
             'alternate_vendors' => 'nullable|array',
             'minimum_order_quantity' => 'nullable|integer|min:0',
             'reorder_level' => 'nullable|integer|min:0',
@@ -231,6 +266,41 @@ class ItemController extends Controller
             'hazmat_class' => 'nullable|string|max:50',
             'temperature_controlled' => 'nullable|boolean',
         ]);
+
+        // Add custom MongoDB validation
+        $validator->after(function ($validator) use ($request) {
+            // Validate category_id if provided
+            if ($request->filled('category_id')) {
+                $category = ItemCategory::find($request->category_id);
+                if (!$category) {
+                    $validator->errors()->add('category_id', 'Selected category is invalid');
+                }
+            }
+
+            // Validate preferred_storage_type_id if provided
+            if ($request->filled('preferred_storage_type_id')) {
+                $storageType = StorageType::find($request->preferred_storage_type_id);
+                if (!$storageType) {
+                    $validator->errors()->add('preferred_storage_type_id', 'Selected preferred storage type is invalid');
+                }
+            }
+
+            // Validate vendor_id if provided
+            if ($request->filled('vendor_id')) {
+                $vendor = Vendor::find($request->vendor_id);
+                if (!$vendor) {
+                    $validator->errors()->add('vendor_id', 'Selected vendor is invalid');
+                }
+            }
+
+            // Validate preferred_bin_id if provided
+            if ($request->filled('preferred_bin_id')) {
+                $bin = \App\Models\Client\Bin::find($request->preferred_bin_id);
+                if (!$bin) {
+                    $validator->errors()->add('preferred_bin_id', 'Selected preferred bin is invalid');
+                }
+            }
+        });
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -437,6 +507,28 @@ class ItemController extends Controller
 
         return redirect()->back()
             ->with('success', 'Item status updated successfully.');
+    }
+
+    /**
+     * Get batches for an item (AJAX endpoint)
+     */
+    public function getBatches($id)
+    {
+        $item = Item::findOrFail($id);
+        $batches = \App\Models\Client\Batch::where('item_id', $id)
+            ->where('status', 'active')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'batches' => $batches->map(function($batch) {
+                return [
+                    '_id' => (string) $batch->_id,
+                    'batch_id' => $batch->batch_id,
+                    'expiry_date' => $batch->expiry_date ? $batch->expiry_date->format('Y-m-d') : null,
+                ];
+            }),
+        ]);
     }
 }
 

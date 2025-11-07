@@ -59,6 +59,16 @@ class VendorController extends Controller
      */
     public function store(Request $request)
     {
+        // Convert empty strings to null for portal fields if portal is not enabled
+        if (!$request->has('vendor_portal_enabled') || $request->vendor_portal_enabled != '1') {
+            if (empty($request->portal_login)) {
+                $request->merge(['portal_login' => null]);
+            }
+            if (empty($request->portal_password)) {
+                $request->merge(['portal_password' => null]);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'vendor_code' => 'required|string|max:50|unique:vendors,vendor_code',
             'vendor_name' => 'required|string|max:255',
@@ -71,11 +81,20 @@ class VendorController extends Controller
             'tax_id' => 'nullable|string|max:50',
             'allow_prebarcode' => 'nullable|boolean',
             'vendor_portal_enabled' => 'nullable|boolean',
-            'portal_login' => 'required_if:vendor_portal_enabled,1|string|max:255',
-            'portal_password' => 'required_if:vendor_portal_enabled,1|string|min:6',
+            'portal_login' => 'nullable',
+            'portal_password' => 'nullable',
             'rating' => 'nullable|numeric|min:0|max:5',
             'notes' => 'nullable|string|max:1000',
         ]);
+
+        // Only validate portal fields if portal is enabled
+        $validator->sometimes('portal_login', 'required|string|max:255', function ($input) {
+            return !empty($input->vendor_portal_enabled);
+        });
+
+        $validator->sometimes('portal_password', 'required|string|min:6', function ($input) {
+            return !empty($input->vendor_portal_enabled);
+        });
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -102,8 +121,8 @@ class VendorController extends Controller
                 'tax_id' => $request->tax_id,
                 'allow_prebarcode' => $request->has('allow_prebarcode'),
                 'vendor_portal_enabled' => $request->has('vendor_portal_enabled'),
-                'portal_login' => $request->portal_login,
-                'portal_password' => $request->portal_password,
+                'portal_login' => $request->has('vendor_portal_enabled') ? $request->portal_login : null,
+                'portal_password' => $request->has('vendor_portal_enabled') ? $request->portal_password : null,
                 'rating' => $request->rating ?? 0,
                 'status' => 'active',
                 'notes' => $request->notes,

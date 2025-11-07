@@ -318,9 +318,37 @@
                         </li>
                         <li class="slide">
                             <a href="{{ route('tenant.items.index') }}"
-                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/items') ? 'active' : '' }}">
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/items') && !str_contains(url()->current(), '/tenant/items/locate') ? 'active' : '' }}">
                                 <i class="bi bi-box-seam w-7 h-7 side-menu__icon"></i>
                                 <span class="side-menu__label">Item Master</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.items.locate') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/items/locate') ? 'active' : '' }}">
+                                <i class="bi bi-search w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Locate Item</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.inventory.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/inventory') ? 'active' : '' }}">
+                                <i class="bi bi-inboxes w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Inventory Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.grns.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/grns') ? 'active' : '' }}">
+                                <i class="bi bi-receipt w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">GRN Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.batches.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/batches') ? 'active' : '' }}">
+                                <i class="bi bi-tags w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Batch Management</span>
                             </a>
                         </li>
                         @endif

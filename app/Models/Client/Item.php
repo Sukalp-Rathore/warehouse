@@ -14,15 +14,19 @@ class Item extends Model
 
     protected $fillable = [
         'item_code',
+        'sku',
         'description',
         'short_description',
         'category',
         'category_id',
         'subcategory',
         'uom',
+        'type', // RM|FG|WIP
         'weight',
+        'weight_per_unit',
         'dimensions',
         'volume',
+        'volume_per_unit',
         'preferred_storage_type_id',
         'preferred_bin_id',
         'vendor_id',
@@ -30,11 +34,16 @@ class Item extends Model
         'minimum_order_quantity',
         'reorder_level',
         'reorder_quantity',
+        'reorder_settings',
         'unit_price',
         'currency',
         'barcode',
+        'barcode_format', // AUTO|VENDOR
         'image_url',
         'specifications',
+        'storage_strategy',
+        'attributes', // free-form key:value pairs
+        'expire_life_days', // for FEFO
         'is_active',
         'is_hazmat',
         'hazmat_class',
@@ -46,12 +55,18 @@ class Item extends Model
         'dimensions' => 'array',
         'alternate_vendors' => 'array',
         'specifications' => 'array',
+        'reorder_settings' => 'array',
+        'storage_strategy' => 'array',
+        'attributes' => 'array',
         'weight' => 'decimal:2',
+        'weight_per_unit' => 'decimal:3',
         'volume' => 'decimal:3',
+        'volume_per_unit' => 'decimal:4',
         'unit_price' => 'decimal:2',
         'minimum_order_quantity' => 'integer',
         'reorder_level' => 'integer',
         'reorder_quantity' => 'integer',
+        'expire_life_days' => 'integer',
         'is_active' => 'boolean',
         'is_hazmat' => 'boolean',
         'temperature_controlled' => 'boolean',
@@ -103,14 +118,6 @@ class Item extends Model
     public function categoryModel()
     {
         return $this->belongsTo(ItemCategory::class, 'category_id');
-    }
-
-    /**
-     * Check if item needs reordering
-     */
-    public function needsReorder($currentStock)
-    {
-        return $currentStock <= $this->reorder_level;
     }
 
     /**
@@ -167,16 +174,68 @@ class Item extends Model
     }
 
     /**
+     * Get all inventory records for this item
+     */
+    public function inventory()
+    {
+        return $this->hasMany(Inventory::class, 'item_id');
+    }
+
+    /**
+     * Get all transactions for this item
+     */
+    public function transactions()
+    {
+        return $this->hasMany(InventoryTransaction::class, 'item_id');
+    }
+
+    /**
+     * Get all batches for this item
+     */
+    public function batches()
+    {
+        return $this->hasMany(Batch::class, 'item_id');
+    }
+
+    /**
+     * Get total available quantity across all locations
+     */
+    public function getTotalAvailableQuantity()
+    {
+        return Inventory::where('item_id', $this->_id)
+                       ->where('status', 'available')
+                       ->sum('available_qty');
+    }
+
+    /**
+     * Check if item needs reordering
+     */
+    public function needsReorder($currentStock)
+    {
+        $globalRl1 = $this->reorder_settings['global_rl1'] ?? $this->reorder_level;
+        return $currentStock <= $globalRl1;
+    }
+
+    /**
      * Search scope
      */
     public function scopeSearch($query, $term)
     {
         return $query->where(function($q) use ($term) {
             $q->where('item_code', 'like', "%{$term}%")
+              ->orWhere('sku', 'like', "%{$term}%")
               ->orWhere('description', 'like', "%{$term}%")
               ->orWhere('short_description', 'like', "%{$term}%")
               ->orWhere('barcode', 'like', "%{$term}%");
         });
+    }
+
+    /**
+     * Scope by type
+     */
+    public function scopeByType($query, $type)
+    {
+        return $query->where('type', $type);
     }
 }
 

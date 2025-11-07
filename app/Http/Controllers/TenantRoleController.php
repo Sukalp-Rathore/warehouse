@@ -177,15 +177,22 @@ class TenantRoleController extends Controller
             
             // Handle permissions that might be stored as string instead of array
             $permissions = $role->permissions ?? [];
-            if (is_string($permissions)) {
+            
+            // If permissions is already an array (from model cast), use it directly
+            if (is_array($permissions)) {
+                // Already an array, use as is
+            } elseif (is_string($permissions)) {
                 // Try to decode JSON string
                 $decoded = json_decode($permissions, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                     $permissions = $decoded;
                 } else {
                     // If not valid JSON, treat as empty array
                     $permissions = [];
                 }
+            } else {
+                // If it's neither string nor array, default to empty array
+                $permissions = [];
             }
             
             \Log::info('Processed permissions', ['permissions' => $permissions]);

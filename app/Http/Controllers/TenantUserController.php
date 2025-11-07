@@ -173,7 +173,13 @@ class TenantUserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['role', 'plants'])->findOrFail($id);
+        $user = User::with('role')->findOrFail($id);
+        
+        // Load plants manually since plant_access is an array, not a relationship
+        $plantIds = $user->plant_access ?? [];
+        $plants = !empty($plantIds) ? Plant::whereIn('_id', $plantIds)->get() : collect();
+        $user->setRelation('plants', $plants);
+        
         return view('tenant.users.show', compact('user'));
     }
 

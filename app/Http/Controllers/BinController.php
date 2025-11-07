@@ -68,6 +68,57 @@ class BinController extends Controller
     }
 
     /**
+     * AJAX endpoint: List bins for a warehouse (for dropdowns)
+     */
+    public function list(Request $request)
+    {
+        $warehouseId = $request->input('warehouse_id');
+        $storageTypeId = $request->input('storage_type_id');
+        $status = $request->input('status', 'available'); // Default to available bins
+        $includeBinId = $request->input('include_bin_id'); // Include specific bin even if status doesn't match
+
+        if (!$warehouseId) {
+            return response()->json(['success' => false, 'message' => 'Warehouse ID is required'], 400);
+        }
+
+        $query = Bin::where('warehouse_id', $warehouseId);
+
+        if ($storageTypeId) {
+            $query->where('storage_type_id', $storageTypeId);
+        }
+
+        // If include_bin_id is provided, we'll get bins matching status OR the specific bin
+        if ($status && $includeBinId) {
+            $query->where(function($q) use ($status, $includeBinId) {
+                $q->where('status', $status)
+                  ->orWhere('_id', $includeBinId);
+            });
+        } elseif ($status) {
+            $query->where('status', $status);
+        }
+
+        $bins = $query->with(['storageType', 'section'])
+                     ->orderBy('bin_code')
+                     ->get();
+
+        return response()->json([
+            'success' => true,
+            'bins' => $bins->map(function ($bin) {
+                return [
+                    'id' => (string) $bin->_id,
+                    'code' => $bin->bin_code,
+                    'name' => $bin->bin_name,
+                    'storage_type' => $bin->storageType->name ?? 'N/A',
+                    'section' => $bin->section->section_name ?? 'N/A',
+                    'status' => $bin->status,
+                    'available_volume' => $bin->max_volume - $bin->current_volume,
+                    'available_weight' => $bin->max_weight - $bin->current_weight,
+                ];
+            })
+        ]);
+    }
+
+    /**
      * Show bin generation form
      */
     public function create(Request $request)

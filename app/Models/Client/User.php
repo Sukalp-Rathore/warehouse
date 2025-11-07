@@ -50,10 +50,16 @@ class User extends Model implements UserContract
 
     /**
      * Get plants the user has access to
+     * Note: This is a helper method, not a relationship, since plant_access is an array
+     * Use getPlantsAttribute() or load plants manually in controllers
      */
-    public function plants()
+    public function getPlantsAttribute()
     {
-        return Plant::whereIn('_id', $this->plant_access ?? [])->get();
+        $plantIds = $this->attributes['plant_access'] ?? $this->plant_access ?? [];
+        if (empty($plantIds)) {
+            return collect();
+        }
+        return Plant::whereIn('_id', $plantIds)->get();
     }
 
     /**

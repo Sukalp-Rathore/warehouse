@@ -27,6 +27,70 @@ class InventoryController extends Controller
     }
 
     /**
+     * Get bins with sufficient capacity for putaway (AJAX endpoint)
+     */
+    public function getBinsForPutaway(Request $request)
+    {
+        $request->validate([
+            'item_id' => 'required',
+            'warehouse_id' => 'required',
+            'quantity' => 'required|numeric|min:0.01',
+        ]);
+
+        $item = Item::find($request->item_id);
+        $warehouse = Warehouse::find($request->warehouse_id);
+
+        if (!$item || !$warehouse) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item or warehouse not found'
+            ], 404);
+        }
+
+        // Calculate required volume and weight
+        $volumePerUnit = $item->volume_per_unit ?? $item->volume ?? 0.01;
+        $weightPerUnit = $item->weight_per_unit ?? $item->weight ?? 0.01;
+        
+        $requiredVolume = $request->quantity * $volumePerUnit;
+        $requiredWeight = $request->quantity * $weightPerUnit;
+
+        // Get bins with sufficient capacity
+        $bins = Bin::where('warehouse_id', $request->warehouse_id)
+            ->where('status', 'available')
+            ->where('is_active', true)
+            ->with(['storageType', 'section'])
+            ->get()
+            ->filter(function($bin) use ($requiredVolume, $requiredWeight) {
+                $availableVolume = ($bin->max_volume ?? 0) - ($bin->current_volume ?? 0);
+                $availableWeight = ($bin->max_weight ?? 0) - ($bin->current_weight ?? 0);
+                return $availableVolume >= $requiredVolume && $availableWeight >= $requiredWeight;
+            })
+            ->map(function($bin) use ($requiredVolume, $requiredWeight) {
+                $availableVolume = ($bin->max_volume ?? 0) - ($bin->current_volume ?? 0);
+                $availableWeight = ($bin->max_weight ?? 0) - ($bin->current_weight ?? 0);
+                
+                return [
+                    '_id' => (string) $bin->_id,
+                    'bin_code' => $bin->bin_code,
+                    'bin_name' => $bin->bin_name ?? $bin->bin_code,
+                    'storage_type' => $bin->storageType->name ?? 'N/A',
+                    'section' => $bin->section->section_name ?? 'N/A',
+                    'available_volume' => round($availableVolume, 2),
+                    'available_weight' => round($availableWeight, 2),
+                    'capacity_utilization' => round($bin->getCapacityUtilization(), 2),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'bins' => $bins,
+            'required_volume' => round($requiredVolume, 2),
+            'required_weight' => round($requiredWeight, 2),
+        ]);
+    }
+
+    /**
      * Display a listing of inventory
      */
     public function index(Request $request)

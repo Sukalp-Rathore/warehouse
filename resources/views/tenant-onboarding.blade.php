@@ -119,218 +119,20 @@
                         </div>
                     </div>
 
-                    {{-- PLANT DETAILS --}}
                     <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-primary text-white fw-semibold">
-                            <i class="fas fa-industry me-2"></i>Plant Details
+                        <div class="card-header bg-light fw-semibold">
+                            <i class="fas fa-rocket me-2"></i>Next Steps
                         </div>
                         <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Plant Code <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="plant_code" placeholder="PLNT001" required>
-                                    <div class="invalid-feedback">Please provide a plant code.</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Plant Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="plant_name" placeholder="Indore Main Plant" required>
-                                    <div class="invalid-feedback">Please provide a plant name.</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Location</label>
-                                    <input type="text" class="form-control" name="plant_location" placeholder="City, State, Country">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Contact Person</label>
-                                    <input type="text" class="form-control" name="plant_contact_name" placeholder="Plant Manager Name">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Contact Email</label>
-                                    <input type="email" class="form-control" name="plant_contact_email" placeholder="manager@company.com">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- WAREHOUSE CONFIG --}}
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-success text-white fw-semibold">
-                            <i class="fas fa-warehouse me-2"></i>Warehouse & Storage Configuration
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Warehouse Code <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="warehouse_code" placeholder="WH01" required>
-                                    <div class="invalid-feedback">Please provide a warehouse code.</div>
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="form-label">Warehouse Description</label>
-                                    <input type="text" class="form-control" name="warehouse_name" placeholder="Main Distribution Center">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Storage Type</label>
-                                    <select class="form-select" name="storage_type">
-                                        <option value="High Rack">High Rack</option>
-                                        <option value="Cold Room">Cold Room</option>
-                                        <option value="Hazmat">Hazmat</option>
-                                        <option value="Floor Storage">Floor Storage</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Default Putaway Strategy</label>
-                                    <select class="form-select" name="default_strategy">
-                                        <option value="FIFO">FIFO (First In, First Out)</option>
-                                        <option value="FEFO">FEFO (First Expiry, First Out)</option>
-                                        <option value="WEIGHT">Weight-Based</option>
-                                        <option value="VOLUME">Volume-Based</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- BIN CONFIG --}}
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-warning fw-semibold">
-                            <i class="fas fa-boxes me-2"></i>Bin & Section Setup
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Total Bins</label>
-                                    <input type="number" class="form-control" name="bin_count" placeholder="25" min="1" max="1000">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Max Volume per Bin (m³)</label>
-                                    <input type="number" class="form-control" step="0.01" name="bin_volume" placeholder="1.0" min="0.1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Reorder Level (L1 / L2)</label>
-                                    <input type="text" class="form-control" placeholder="20 / 10" name="reorder_levels">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- ITEM / VENDOR RULES --}}
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-secondary text-white fw-semibold">
-                            <i class="fas fa-handshake me-2"></i>Item & Vendor Rules
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Enable Vendor Portal?</label>
-                                    <select class="form-select" name="vendor_portal">
-                                        <option value="1">Yes</option>
-                                        <option value="0">No</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Allow Vendor Pre-Barcoding?</label>
-                                    <select class="form-select" name="vendor_prebarcode">
-                                        <option value="1">Yes</option>
-                                        <option value="0">No</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- BARCODE SETTINGS --}}
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-info text-white fw-semibold">
-                            <i class="fas fa-barcode me-2"></i>Barcode Format
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Bin Prefix</label>
-                                    <input type="text" class="form-control" name="barcode_bin_prefix" placeholder="BIN-">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Shipment Prefix</label>
-                                    <input type="text" class="form-control" name="barcode_shipment_prefix" placeholder="SHP-">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Barcode Length</label>
-                                    <input type="number" class="form-control" name="barcode_length" placeholder="8" min="4" max="20">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- ROLES --}}
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-danger text-white fw-semibold">
-                            <i class="fas fa-users-cog me-2"></i>Roles & Permissions
-                        </div>
-                        <div class="card-body">
-                            <label class="form-label">Role Configuration (JSON Format)</label>
-                            <textarea class="form-control" rows="6" name="roles_json" 
-                                placeholder='Example: [{"role":"Warehouse Manager","permissions":["grn.create","to.approve"]},{"role":"Inventory Clerk","permissions":["inventory.view","inventory.update"]}]'></textarea>
-                            <div class="form-text">Define roles and their permissions in JSON format.</div>
-                        </div>
-                    </div>
-
-                    {{-- REORDER / ALERT RULES --}}
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-dark text-white fw-semibold">
-                            <i class="fas fa-bell me-2"></i>Reorder & Alert Rules
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Global Reorder L1</label>
-                                    <input type="number" class="form-control" name="global_rl1" value="20" min="1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Global Reorder L2</label>
-                                    <input type="number" class="form-control" name="global_rl2" value="10" min="1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Alert Channels</label>
-                                    <select multiple class="form-select" name="alert_channels[]">
-                                        <option value="email">Email</option>
-                                        <option value="sms">SMS</option>
-                                        <option value="whatsapp">WhatsApp</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- INTEGRATIONS --}}
-                    <div class="card mb-4 shadow-sm">
-                        <div class="card-header bg-secondary text-white fw-semibold">
-                            <i class="fas fa-plug me-2"></i>Integration Settings
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">SAP Endpoint</label>
-                                    <input type="url" class="form-control" name="sap_endpoint" placeholder="https://sap.company.com/api">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">API Token</label>
-                                    <input type="text" class="form-control" name="sap_token" placeholder="Your SAP API Token">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Enable WhatsApp Integration</label>
-                                    <select class="form-select" name="whatsapp_enabled">
-                                        <option value="1">Yes</option>
-                                        <option value="0">No</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Voice/AI Provider</label>
-                                    <select class="form-select" name="ai_provider">
-                                        <option value="mistral">Mistral</option>
-                                        <option value="openai">OpenAI</option>
-                                        <option value="none">None</option>
-                                    </select>
-                                </div>
+                            <p class="mb-2">Once this form is submitted we will:</p>
+                            <ul class="mb-3">
+                                <li>Provision an isolated database for this tenant</li>
+                                <li>Create the admin user with the credentials above</li>
+                                <li>Prompt the admin to complete plant, warehouse, bin, and integration setup after login</li>
+                            </ul>
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Detailed operational configuration can be completed later from the tenant dashboard. This form only collects the essentials to get started.
                             </div>
                         </div>
                     </div>
@@ -391,9 +193,6 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
 
-                // Handle multi-select values
-                data.alert_channels = formData.getAll('alert_channels[]');
-
                 // Submit form
                 fetch('{{ route("tenant.onboard") }}', {
                     method: 'POST',
@@ -441,26 +240,6 @@
                     }
                 }, 5000);
             }
-
-            // Auto-generate plant code based on company name
-            const companyNameInput = document.querySelector('input[name="tenant_name"]');
-            const plantCodeInput = document.querySelector('input[name="plant_code"]');
-            
-            companyNameInput.addEventListener('input', function() {
-                if (!plantCodeInput.value) {
-                    const code = this.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 6).toUpperCase();
-                    plantCodeInput.value = code + '001';
-                }
-            });
-
-            // Auto-generate warehouse code
-            const warehouseCodeInput = document.querySelector('input[name="warehouse_code"]');
-            companyNameInput.addEventListener('input', function() {
-                if (!warehouseCodeInput.value) {
-                    const code = this.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase();
-                    warehouseCodeInput.value = 'WH' + code;
-                }
-            });
 
             // Password confirmation real-time validation
             const passwordInput = document.querySelector('input[name="admin_password"]');

@@ -24,6 +24,8 @@ class Bin extends Model
         'max_weight',
         'current_volume',
         'current_weight',
+        'reorder_level',
+        'reorder_quantity',
         'status',
         'is_active',
         'created_by'
@@ -35,6 +37,8 @@ class Bin extends Model
         'max_weight' => 'decimal:2',
         'current_volume' => 'decimal:2',
         'current_weight' => 'decimal:2',
+        'reorder_level' => 'decimal:2',
+        'reorder_quantity' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 

@@ -63,14 +63,14 @@
                                     <div class="row">
                                         <div class="col-md-3">
                                             <label class="form-label">Quantity *</label>
-                                            <input type="number" name="quantity" class="form-control" step="0.01" min="0.01" max="{{ $remainingQty }}" required>
+                                            <input type="number" name="quantity" id="quantity-{{ $index }}" class="form-control quantity-input" step="0.01" min="0.01" max="{{ $remainingQty }}" required data-item-id="{{ $grnItem['item_id'] }}" data-warehouse-id="{{ $grn->warehouse_id }}">
                                         </div>
                                         <div class="col-md-9">
                                             <label class="form-label">Bin *</label>
-                                            <select name="bin_id" class="form-select bin-select" required>
-                                                <option value="">Select Bin</option>
+                                            <select name="bin_id" id="bin-select-{{ $index }}" class="form-select bin-select" required disabled>
+                                                <option value="">Enter Quantity First</option>
                                             </select>
-                                            <small class="text-muted">Select a bin or use suggestions below</small>
+                                            <small class="text-muted bin-help-{{ $index }}">Enter quantity to see bins with sufficient capacity</small>
                                         </div>
                                     </div>
 
@@ -124,43 +124,83 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Load bins for warehouse
-    const warehouseId = '{{ $grn->warehouse_id }}';
-    
-    // Load all bins for this warehouse
-    fetch(`{{ route('tenant.bins.list') }}?warehouse_id=${warehouseId}`)
+    // Function to load bins with sufficient capacity for a specific item/quantity
+    function loadBinsForPutaway(quantityInput) {
+        const quantity = quantityInput.value;
+        const itemId = quantityInput.dataset.itemId;
+        const warehouseId = quantityInput.dataset.warehouseId;
+        const index = quantityInput.id.replace('quantity-', '');
+        const binSelect = document.getElementById(`bin-select-${index}`);
+        const binHelp = document.querySelector(`.bin-help-${index}`);
+
+        if (!quantity || parseFloat(quantity) <= 0 || !itemId || !warehouseId) {
+            binSelect.innerHTML = '<option value="">Enter Quantity First</option>';
+            binSelect.disabled = true;
+            binHelp.textContent = 'Enter quantity to see bins with sufficient capacity';
+            return;
+        }
+
+        binSelect.innerHTML = '<option value="">Loading bins...</option>';
+        binSelect.disabled = true;
+
+        fetch(`{{ route('tenant.inventory.get-bins-for-putaway') }}?item_id=${itemId}&warehouse_id=${warehouseId}&quantity=${quantity}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
         .then(response => response.json())
         .then(data => {
-            if (data.success && data.bins.length > 0) {
-                // Populate all bin selects with available bins
-                document.querySelectorAll('.bin-select').forEach(select => {
-                    // Clear existing options except the first one
-                    while (select.options.length > 1) {
-                        select.remove(1);
-                    }
-                    
-                    // Add bins to dropdown
+            if (data.success) {
+                binSelect.innerHTML = '<option value="">Select Bin</option>';
+                
+                if (data.bins.length > 0) {
                     data.bins.forEach(bin => {
                         const option = document.createElement('option');
-                        option.value = bin.id;
-                        option.textContent = `${bin.code} - ${bin.name} (${bin.storage_type}${bin.section !== 'N/A' ? ' - ' + bin.section : ''}) [${bin.status}]`;
-                        select.appendChild(option);
+                        option.value = bin._id;
+                        let label = `${bin.bin_code} - ${bin.bin_name}`;
+                        if (bin.storage_type !== 'N/A') {
+                            label += ` (${bin.storage_type})`;
+                        }
+                        label += ` [Utilization: ${bin.capacity_utilization}%]`;
+                        option.textContent = label;
+                        binSelect.appendChild(option);
                     });
-                });
+                    binSelect.disabled = false;
+                    binHelp.textContent = `Found ${data.bins.length} bin(s) with sufficient capacity. Required: ${data.required_volume} m³ volume, ${data.required_weight} kg weight.`;
+                } else {
+                    binSelect.innerHTML = '<option value="">No bins with sufficient capacity</option>';
+                    binSelect.disabled = true;
+                    binHelp.textContent = `No bins found with sufficient capacity. Required: ${data.required_volume} m³ volume, ${data.required_weight} kg weight.`;
+                }
             } else {
-                // Show message if no bins found
-                document.querySelectorAll('.bin-select').forEach(select => {
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = 'No bins available for this warehouse';
-                    option.disabled = true;
-                    select.appendChild(option);
-                });
+                binSelect.innerHTML = '<option value="">Error loading bins</option>';
+                binSelect.disabled = true;
+                binHelp.textContent = 'Error: ' + (data.message || 'Failed to load bins');
             }
         })
         .catch(error => {
-            console.error('Error loading bins:', error);
+            console.error('Error fetching bins:', error);
+            binSelect.innerHTML = '<option value="">Error loading bins</option>';
+            binSelect.disabled = true;
+            binHelp.textContent = 'An error occurred while loading bins.';
         });
+    }
+
+    // Add event listeners to all quantity inputs
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('input', function() {
+            // Debounce the input
+            clearTimeout(this.loadBinsTimeout);
+            this.loadBinsTimeout = setTimeout(() => loadBinsForPutaway(this), 500);
+        });
+        
+        // Load bins on page load if quantity is already set
+        if (input.value) {
+            loadBinsForPutaway(input);
+        }
+    });
 
     // Batch selection handler
     document.querySelectorAll('select[name="batch_id"]').forEach(select => {

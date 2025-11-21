@@ -69,30 +69,26 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="bin_id" class="form-label">Bin *</label>
-                                    <select name="bin_id" id="bin_id" class="form-select @error('bin_id') is-invalid @enderror" required>
-                                        <option value="">Select Bin</option>
-                                        @foreach($bins as $bin)
-                                            <option value="{{ $bin->_id }}" {{ old('bin_id') == $bin->_id ? 'selected' : '' }}>
-                                                {{ $bin->bin_code }} - {{ $bin->bin_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('bin_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <small class="text-muted">Select a bin from the available bins. System will auto-generate barcode, QR code, and RFID tag.</small>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
                                     <label for="quantity" class="form-label">Quantity *</label>
                                     <input type="number" name="quantity" id="quantity" class="form-control @error('quantity') is-invalid @enderror" 
                                            value="{{ old('quantity') }}" step="0.01" min="0.01" required>
                                     @error('quantity')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    <small class="text-muted">Enter quantity first to see bins with sufficient capacity</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="bin_id" class="form-label">Bin *</label>
+                                    <select name="bin_id" id="bin_id" class="form-select @error('bin_id') is-invalid @enderror" required disabled>
+                                        <option value="">Select Item, Warehouse, and Quantity First</option>
+                                    </select>
+                                    @error('bin_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted" id="bin-help-text">Bins will be filtered based on selected quantity and item capacity requirements.</small>
                                 </div>
                             </div>
                         </div>
@@ -213,6 +209,92 @@ document.addEventListener('DOMContentLoaded', function() {
             batchSelect.innerHTML = '<option value="">No Batch</option>';
         }
     });
+
+    // Filter bins based on item, warehouse, and quantity
+    const warehouseSelect = document.getElementById('warehouse_id');
+    const quantityInput = document.getElementById('quantity');
+    const binSelect = document.getElementById('bin_id');
+    const binHelpText = document.getElementById('bin-help-text');
+
+    function loadBinsForPutaway() {
+        const itemId = itemSelect.value;
+        const warehouseId = warehouseSelect.value;
+        const quantity = quantityInput.value;
+
+        if (!itemId || !warehouseId || !quantity || parseFloat(quantity) <= 0) {
+            binSelect.innerHTML = '<option value="">Select Item, Warehouse, and Quantity First</option>';
+            binSelect.disabled = true;
+            binHelpText.textContent = 'Bins will be filtered based on selected quantity and item capacity requirements.';
+            return;
+        }
+
+        binSelect.innerHTML = '<option value="">Loading bins...</option>';
+        binSelect.disabled = true;
+
+        fetch(`{{ route('tenant.inventory.get-bins-for-putaway') }}?item_id=${itemId}&warehouse_id=${warehouseId}&quantity=${quantity}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                binSelect.innerHTML = '<option value="">Select Bin</option>';
+                
+                if (data.bins.length > 0) {
+                    data.bins.forEach(bin => {
+                        const option = document.createElement('option');
+                        option.value = bin._id;
+                        let label = `${bin.bin_code} - ${bin.bin_name}`;
+                        if (bin.storage_type !== 'N/A') {
+                            label += ` (${bin.storage_type})`;
+                        }
+                        label += ` [Utilization: ${bin.capacity_utilization}%]`;
+                        option.textContent = label;
+                        binSelect.appendChild(option);
+                    });
+                    binSelect.disabled = false;
+                    binHelpText.textContent = `Found ${data.bins.length} bin(s) with sufficient capacity. Required: ${data.required_volume} m³ volume, ${data.required_weight} kg weight.`;
+                } else {
+                    binSelect.innerHTML = '<option value="">No bins with sufficient capacity</option>';
+                    binSelect.disabled = true;
+                    binHelpText.textContent = `No bins found with sufficient capacity. Required: ${data.required_volume} m³ volume, ${data.required_weight} kg weight.`;
+                }
+
+                // Restore old value if exists
+                const oldValue = '{{ old("bin_id") }}';
+                if (oldValue && Array.from(binSelect.options).some(opt => opt.value === oldValue)) {
+                    binSelect.value = oldValue;
+                }
+            } else {
+                binSelect.innerHTML = '<option value="">Error loading bins</option>';
+                binSelect.disabled = true;
+                binHelpText.textContent = 'Error: ' + (data.message || 'Failed to load bins');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching bins:', error);
+            binSelect.innerHTML = '<option value="">Error loading bins</option>';
+            binSelect.disabled = true;
+            binHelpText.textContent = 'An error occurred while loading bins.';
+        });
+    }
+
+    // Listen for changes in item, warehouse, or quantity
+    itemSelect.addEventListener('change', loadBinsForPutaway);
+    warehouseSelect.addEventListener('change', loadBinsForPutaway);
+    quantityInput.addEventListener('input', function() {
+        // Debounce the input
+        clearTimeout(this.loadBinsTimeout);
+        this.loadBinsTimeout = setTimeout(loadBinsForPutaway, 500);
+    });
+
+    // Load bins on page load if all values are present
+    if (itemSelect.value && warehouseSelect.value && quantityInput.value) {
+        loadBinsForPutaway();
+    }
 });
 </script>
 @endsection

@@ -345,6 +345,20 @@
                             </a>
                         </li>
                         <li class="slide">
+                            <a href="{{ route('tenant.transfer-orders.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/transfer-orders') ? 'active' : '' }}">
+                                <i class="bi bi-arrow-left-right w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Transfer Orders</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.delivery-orders.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/delivery-orders') ? 'active' : '' }}">
+                                <i class="bi bi-truck w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Delivery Orders</span>
+                            </a>
+                        </li>
+                        <li class="slide">
                             <a href="{{ route('tenant.batches.index') }}"
                                 class="side-menu__item {{ str_contains(url()->current(), '/tenant/batches') ? 'active' : '' }}">
                                 <i class="bi bi-tags w-7 h-7 side-menu__icon"></i>

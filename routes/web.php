@@ -524,6 +524,7 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
     Route::get('/inventory', [App\Http\Controllers\InventoryController::class, 'index'])->name('tenant.inventory.index');
     Route::get('/inventory/create', [App\Http\Controllers\InventoryController::class, 'create'])->name('tenant.inventory.create');
     Route::post('/inventory', [App\Http\Controllers\InventoryController::class, 'store'])->name('tenant.inventory.store');
+    Route::get('/inventory/get-bins-for-putaway', [App\Http\Controllers\InventoryController::class, 'getBinsForPutaway'])->name('tenant.inventory.get-bins-for-putaway');
     Route::get('/inventory/{id}', [App\Http\Controllers\InventoryController::class, 'show'])->name('tenant.inventory.show');
     Route::get('/inventory/{id}/transfer', [App\Http\Controllers\InventoryController::class, 'transferForm'])->name('tenant.inventory.transfer');
     Route::post('/inventory/{id}/transfer', [App\Http\Controllers\InventoryController::class, 'transfer'])->name('tenant.inventory.transfer.store');
@@ -549,6 +550,36 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
     // Putaway AJAX Routes
     Route::get('/putaway/suggest', [App\Http\Controllers\PutawayController::class, 'suggestBins'])->name('tenant.putaway.suggest');
     Route::post('/putaway/validate', [App\Http\Controllers\PutawayController::class, 'validateBin'])->name('tenant.putaway.validate');
+    
+    // Transfer Order Management
+    Route::get('/transfer-orders/get-bins-for-item', [App\Http\Controllers\TransferOrderController::class, 'getBinsForItem'])->name('tenant.transfer-orders.get-bins-for-item');
+
+    Route::resource('transfer-orders', App\Http\Controllers\TransferOrderController::class)->names([
+        'index' => 'tenant.transfer-orders.index',
+        'create' => 'tenant.transfer-orders.create',
+        'store' => 'tenant.transfer-orders.store',
+        'show' => 'tenant.transfer-orders.show',
+        'edit' => 'tenant.transfer-orders.edit',
+        'update' => 'tenant.transfer-orders.update',
+        'destroy' => 'tenant.transfer-orders.destroy'
+    ]);
+    Route::post('/transfer-orders/{id}/approve', [App\Http\Controllers\TransferOrderController::class, 'approve'])->name('tenant.transfer-orders.approve');
+    Route::post('/transfer-orders/{id}/assign', [App\Http\Controllers\TransferOrderController::class, 'assign'])->name('tenant.transfer-orders.assign');
+    Route::post('/transfer-orders/{id}/execute', [App\Http\Controllers\TransferOrderController::class, 'execute'])->name('tenant.transfer-orders.execute');
+    Route::post('/transfer-orders/{id}/cancel', [App\Http\Controllers\TransferOrderController::class, 'cancel'])->name('tenant.transfer-orders.cancel');
+    Route::post('/transfer-orders/auto-generate', [App\Http\Controllers\TransferOrderController::class, 'autoGenerate'])->name('tenant.transfer-orders.auto-generate');
+    
+    // Delivery Order Management
+    Route::resource('delivery-orders', App\Http\Controllers\DeliveryOrderController::class)->names([
+        'index' => 'tenant.delivery-orders.index',
+        'create' => 'tenant.delivery-orders.create',
+        'store' => 'tenant.delivery-orders.store',
+        'show' => 'tenant.delivery-orders.show',
+        'edit' => 'tenant.delivery-orders.edit',
+        'update' => 'tenant.delivery-orders.update',
+        'destroy' => 'tenant.delivery-orders.destroy'
+    ]);
+    Route::post('/delivery-orders/{id}/generate-picking', [App\Http\Controllers\DeliveryOrderController::class, 'generatePickingTasks'])->name('tenant.delivery-orders.generate-picking');
 });
 
 // Tenant Management Routes - Only accessible to master admin users

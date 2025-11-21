@@ -40,13 +40,10 @@ class TenantOnboardingController extends Controller
         $request->validate([
             'tenant_name' => 'required|string|max:255',
             'tenant_email' => 'required|email|max:255',
+            'timezone' => 'required|string',
+            'admin_name' => 'required|string|max:255',
             'admin_email' => 'required|email|max:255',
             'admin_password' => 'required|string|min:8|confirmed',
-            'admin_name' => 'required|string|max:255',
-            'timezone' => 'required|string',
-            'plant_code' => 'required|string|max:50',
-            'plant_name' => 'required|string|max:255',
-            'warehouse_code' => 'required|string|max:50',
         ]);
 
         try {
@@ -217,51 +214,55 @@ class TenantOnboardingController extends Controller
      */
     private function prepareTenantSettings(Request $request, $clientId)
     {
+        $defaultWarehouseCode = 'WH-' . strtoupper(Str::random(4));
+        $defaultWarehouseName = $request->tenant_name ? $request->tenant_name . ' Warehouse' : 'Primary Warehouse';
+        $defaultPlantCode = 'PLT-' . strtoupper(Str::random(4));
+
         return [
             'client_id' => $clientId,
             'tenant_name' => $request->tenant_name,
             'tenant_email' => $request->tenant_email,
             'timezone' => $request->timezone,
             'plant_details' => [
-                'plant_code' => $request->plant_code,
-                'plant_name' => $request->plant_name,
-                'plant_location' => $request->plant_location,
-                'plant_contact_name' => $request->plant_contact_name,
-                'plant_contact_email' => $request->plant_contact_email,
+                'plant_code' => $defaultPlantCode,
+                'plant_name' => $request->tenant_name ? $request->tenant_name . ' Plant' : 'Primary Plant',
+                'plant_location' => null,
+                'plant_contact_name' => null,
+                'plant_contact_email' => null,
             ],
             'warehouse_config' => [
-                'warehouse_code' => $request->warehouse_code,
-                'warehouse_name' => $request->warehouse_name,
-                'storage_type' => $request->storage_type,
-                'default_strategy' => $request->default_strategy,
+                'warehouse_code' => $defaultWarehouseCode,
+                'warehouse_name' => $defaultWarehouseName,
+                'storage_type' => 'Standard',
+                'default_strategy' => 'FIFO',
             ],
             'bin_config' => [
-                'bin_count' => $request->bin_count,
-                'bin_volume' => $request->bin_volume,
-                'reorder_levels' => $request->reorder_levels,
+                'bin_count' => 25,
+                'bin_volume' => 1.0,
+                'reorder_levels' => '20 / 10',
             ],
             'item_vendor_rules' => [
-                'vendor_portal' => $request->vendor_portal,
-                'vendor_prebarcode' => $request->vendor_prebarcode,
+                'vendor_portal' => false,
+                'vendor_prebarcode' => false,
             ],
             'barcode_settings' => [
-                'barcode_bin_prefix' => $request->barcode_bin_prefix,
-                'barcode_shipment_prefix' => $request->barcode_shipment_prefix,
-                'barcode_length' => $request->barcode_length,
+                'barcode_bin_prefix' => 'BIN-',
+                'barcode_shipment_prefix' => 'SHP-',
+                'barcode_length' => 8,
             ],
             'roles_permissions' => [
-                'roles_json' => $request->roles_json,
+                'roles_json' => null,
             ],
             'reorder_alert_rules' => [
-                'global_rl1' => $request->global_rl1,
-                'global_rl2' => $request->global_rl2,
-                'alert_channels' => $request->alert_channels,
+                'global_rl1' => 20,
+                'global_rl2' => 10,
+                'alert_channels' => ['email'],
             ],
             'integration_settings' => [
-                'sap_endpoint' => $request->sap_endpoint,
-                'sap_token' => $request->sap_token,
-                'whatsapp_enabled' => $request->whatsapp_enabled,
-                'ai_provider' => $request->ai_provider,
+                'sap_endpoint' => null,
+                'sap_token' => null,
+                'whatsapp_enabled' => false,
+                'ai_provider' => 'none',
             ],
             'status' => 'active',
             'configuration_completed' => false, // Tenant admin must complete configuration on first login

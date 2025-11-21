@@ -10,17 +10,11 @@ The tenant onboarding system allows system administrators to create and configur
 
 ### 1. Tenant Onboarding Form
 - **Location**: `/tenant/onboard`
-- **Purpose**: Create new tenants with comprehensive configuration
+- **Purpose**: Quickly collect the minimum data required to spin up a new tenant
 - **Form Sections**:
-  - Tenant Information (Company name, email, timezone)
-  - Plant Details (Plant code, name, location, contacts)
-  - Warehouse Configuration (Warehouse code, storage type, putaway strategy)
-  - Bin & Section Setup (Total bins, volume limits, reorder levels)
-  - Item & Vendor Rules (Vendor portal, pre-barcoding)
-  - Barcode Settings (Prefixes, length)
-  - Roles & Permissions (JSON configuration)
-  - Reorder & Alert Rules (Global levels, alert channels)
-  - Integration Settings (SAP, WhatsApp, AI providers)
+  - Tenant Information (Company name, contact email, timezone)
+  - Admin User Account (Name, email, password)
+- All advanced configuration (plants, warehouses, bins, integrations, roles, etc.) is deferred to the tenant admin after their first login.
 
 ### 2. Tenant Management
 - **List View**: `/tenant/list` - View all tenants

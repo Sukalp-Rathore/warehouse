@@ -248,4 +248,80 @@ class Inventory extends Model
         
         return implode(' → ', $path);
     }
+
+    /**
+     * Boot method to add validation before saving
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($inventory) {
+            // Validate barcode uniqueness (excluding current record)
+            if ($inventory->barcode) {
+                $barcodeExists = static::where('barcode', $inventory->barcode)
+                    ->where('_id', '!=', $inventory->_id)
+                    ->exists();
+                if ($barcodeExists) {
+                    throw new \Exception('Barcode must be unique. The barcode "' . $inventory->barcode . '" already exists.');
+                }
+            }
+
+            // Validate QR code uniqueness (excluding current record)
+            if ($inventory->qr_code) {
+                $qrCodeExists = static::where('qr_code', $inventory->qr_code)
+                    ->where('_id', '!=', $inventory->_id)
+                    ->exists();
+                if ($qrCodeExists) {
+                    throw new \Exception('QR code must be unique. The QR code "' . $inventory->qr_code . '" already exists.');
+                }
+            }
+
+            // Validate RFID tag uniqueness (excluding current record)
+            if ($inventory->rfid_tag) {
+                $rfidTagExists = static::where('rfid_tag', $inventory->rfid_tag)
+                    ->where('_id', '!=', $inventory->_id)
+                    ->exists();
+                if ($rfidTagExists) {
+                    throw new \Exception('RFID tag must be unique. The RFID tag "' . $inventory->rfid_tag . '" already exists.');
+                }
+            }
+        });
+    }
+
+    /**
+     * Check if a barcode is unique
+     */
+    public static function isBarcodeUnique($barcode, $excludeId = null)
+    {
+        $query = static::where('barcode', $barcode);
+        if ($excludeId) {
+            $query->where('_id', '!=', $excludeId);
+        }
+        return !$query->exists();
+    }
+
+    /**
+     * Check if a QR code is unique
+     */
+    public static function isQRCodeUnique($qrCode, $excludeId = null)
+    {
+        $query = static::where('qr_code', $qrCode);
+        if ($excludeId) {
+            $query->where('_id', '!=', $excludeId);
+        }
+        return !$query->exists();
+    }
+
+    /**
+     * Check if an RFID tag is unique
+     */
+    public static function isRFIDTagUnique($rfidTag, $excludeId = null)
+    {
+        $query = static::where('rfid_tag', $rfidTag);
+        if ($excludeId) {
+            $query->where('_id', '!=', $excludeId);
+        }
+        return !$query->exists();
+    }
 }

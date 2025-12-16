@@ -10,128 +10,109 @@ use App\Models\Client\Warehouse;
 use App\Models\Client\Batch;
 use App\Services\InventoryMovementService;
 use App\Services\BarcodeGenerationService;
+use App\Services\SAPIntegrationService;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\PermissionHelper;
 
 class GRNController extends Controller
 {
     protected $movementService;
     protected $barcodeService;
+    protected $sapService;
 
     public function __construct(
         InventoryMovementService $movementService,
-        BarcodeGenerationService $barcodeService
+        BarcodeGenerationService $barcodeService,
+        SAPIntegrationService $sapService
     ) {
         $this->movementService = $movementService;
         $this->barcodeService = $barcodeService;
+        $this->sapService = $sapService;
     }
 
     /**
      * Display a listing of GRNs
+     * Shows pending approval and approved GRNs separately
      */
     public function index(Request $request)
     {
-        $query = GRN::with(['vendor', 'warehouse']);
+        // Get pending approval GRNs
+        $pendingQuery = GRN::with(['vendor', 'warehouse'])
+            ->where('status', 'pending');
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        // Get approved GRNs
+        $approvedQuery = GRN::with(['vendor', 'warehouse'])
+            ->where('status', 'approved');
 
+        // Apply filters
         if ($request->filled('warehouse_id')) {
-            $query->where('warehouse_id', $request->warehouse_id);
+            $pendingQuery->where('warehouse_id', $request->warehouse_id);
+            $approvedQuery->where('warehouse_id', $request->warehouse_id);
         }
 
         if ($request->filled('vendor_id')) {
-            $query->where('vendor_id', $request->vendor_id);
+            $pendingQuery->where('vendor_id', $request->vendor_id);
+            $approvedQuery->where('vendor_id', $request->vendor_id);
         }
 
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('grn_number', 'like', "%{$request->search}%")
-                  ->orWhere('po_reference', 'like', "%{$request->search}%");
+            $search = $request->search;
+            $pendingQuery->where(function($q) use ($search) {
+                $q->where('grn_number', 'like', "%{$search}%")
+                  ->orWhere('po_reference', 'like', "%{$search}%");
+            });
+            $approvedQuery->where(function($q) use ($search) {
+                $q->where('grn_number', 'like', "%{$search}%")
+                  ->orWhere('po_reference', 'like', "%{$search}%");
             });
         }
 
-        $grns = $query->orderBy('created_at', 'desc')->paginate(20);
-        $warehouses = Warehouse::active()->get();
+        // Apply warehouse filter from session
+        $pendingQuery = \App\Services\DataFilteringService::filterByWarehouse($pendingQuery);
+        $approvedQuery = \App\Services\DataFilteringService::filterByWarehouse($approvedQuery);
+
+        $pendingGRNs = $pendingQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'pending_page');
+        $approvedGRNs = $approvedQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'approved_page');
+        
+        // Filter warehouses by user's warehouse access
+        $user = session('user');
+        $userWarehouseAccess = $user['warehouse_access'] ?? [];
+        $warehousesQuery = Warehouse::active();
+        if (!empty($userWarehouseAccess)) {
+            $warehousesQuery->whereIn('_id', $userWarehouseAccess);
+        }
+        $warehouses = $warehousesQuery->get();
+        
         $vendors = Vendor::active()->get();
 
-        return view('tenant.grns.index', compact('grns', 'warehouses', 'vendors'));
+        return view('tenant.grns.index', compact('pendingGRNs', 'approvedGRNs', 'warehouses', 'vendors'));
     }
 
     /**
-     * Show the form for creating a new GRN
+     * Sync GRNs from SAP
      */
-    public function create()
+    public function syncFromSAP(Request $request)
     {
-        $vendors = Vendor::active()->get();
-        $warehouses = Warehouse::active()->with('plant')->get();
-        $items = Item::active()->get();
-
-        return view('tenant.grns.create', compact('vendors', 'warehouses', 'items'));
-    }
-
-    /**
-     * Store a newly created GRN
-     */
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'vendor_id' => 'required',
-            'warehouse_id' => 'required',
-            'po_reference' => 'nullable|string|max:100',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-        ]);
-
-        $validator->after(function ($validator) use ($request) {
-            $vendor = Vendor::find($request->vendor_id);
-            if (!$vendor) {
-                $validator->errors()->add('vendor_id', 'Selected vendor is invalid');
-            }
-
-            $warehouse = Warehouse::find($request->warehouse_id);
-            if (!$warehouse) {
-                $validator->errors()->add('warehouse_id', 'Selected warehouse is invalid');
-            }
-
-            foreach ($request->items as $index => $item) {
-                $itemModel = Item::find($item['item_id']);
-                if (!$itemModel) {
-                    $validator->errors()->add("items.{$index}.item_id", "Item at row " . ($index + 1) . " is invalid");
-                }
-            }
-        });
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+        // Feature gating: ensure tenant's plan includes SAP GRN integration
+        if (!PermissionHelper::tenantHasFeature('grn_sap_integration')) {
+            return redirect()->route('tenant.grns.index')
+                ->withErrors(['error' => 'Your current plan does not include SAP GRN integration. Please contact your administrator.']);
         }
 
-        try {
-            // Generate GRN number
-            $grnNumber = $this->generateGRNNumber();
+        $status = $request->input('status'); // Optional: pending or approved
+        
+        $result = $this->sapService->fetchGRNs($status);
 
-            $grn = GRN::create([
-                'grn_number' => $grnNumber,
-                'vendor_id' => $request->vendor_id,
-                'warehouse_id' => $request->warehouse_id,
-                'po_reference' => $request->po_reference,
-                'status' => 'pending',
-                'putaway_status' => 'pending',
-                'items' => $request->items,
-                'created_by' => session('user._id'),
-            ]);
-
-            return redirect()->route('tenant.grns.show', $grn->_id)
-                ->with('success', 'GRN created successfully');
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->withErrors(['error' => 'Failed to create GRN: ' . $e->getMessage()])
-                ->withInput();
+        if ($result['success']) {
+            return redirect()->route('tenant.grns.index')
+                ->with('success', $result['message'])
+                ->with('sync_errors', $result['errors'] ?? []);
+        } else {
+            return redirect()->route('tenant.grns.index')
+                ->withErrors(['error' => $result['message']]);
         }
     }
+
 
     /**
      * Display the specified GRN
@@ -148,7 +129,7 @@ class GRNController extends Controller
     }
 
     /**
-     * Approve GRN
+     * Approve GRN (for pending approval GRNs)
      */
     public function approve(Request $request, $id)
     {
@@ -159,9 +140,13 @@ class GRNController extends Controller
                 ->withErrors(['error' => 'GRN cannot be approved in its current status']);
         }
 
-        $grn->approve(session('user._id'));
+        $grn->update([
+            'status' => 'approved',
+            'approved_by' => session('user._id'),
+            'approved_at' => now(),
+        ]);
 
-        return redirect()->route('tenant.grns.show', $id)
+        return redirect()->route('tenant.grns.index')
             ->with('success', 'GRN approved successfully');
     }
 
@@ -172,7 +157,7 @@ class GRNController extends Controller
     {
         $grn = GRN::with(['vendor', 'warehouse'])->findOrFail($id);
 
-        if ($grn->status !== 'in_progress' && $grn->status !== 'approved' && $grn->status !== 'partially_putaway') {
+        if ($grn->status !== 'approved' && $grn->status !== 'in_progress') {
             return redirect()->route('tenant.grns.show', $id)
                 ->withErrors(['error' => 'GRN must be approved before putaway']);
         }
@@ -238,12 +223,12 @@ class GRNController extends Controller
                 $batchId = (string) $batch->_id;
             }
 
-            // Generate codes
+            // Generate codes with warehouse and bin IDs for uniqueness
             $item = Item::find($grnItem['item_id']);
             $codes = $this->barcodeService->generateAllCodes(
                 $item->item_code,
-                null,
-                null
+                $grn->warehouse_id,
+                $request->bin_id
             );
 
             // Execute putaway
@@ -297,24 +282,5 @@ class GRNController extends Controller
             ->with('success', 'GRN marked as completed');
     }
 
-    /**
-     * Generate unique GRN number
-     */
-    private function generateGRNNumber()
-    {
-        $year = date('Y');
-        $lastGRN = GRN::where('grn_number', 'like', "GRN-{$year}-%")
-            ->orderBy('grn_number', 'desc')
-            ->first();
-
-        if ($lastGRN) {
-            $lastNumber = (int) substr($lastGRN->grn_number, -4);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
-        }
-
-        return sprintf('GRN-%s-%04d', $year, $nextNumber);
-    }
 }
 

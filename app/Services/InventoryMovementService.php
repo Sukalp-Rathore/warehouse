@@ -9,26 +9,59 @@ use App\Models\Client\Batch;
 use App\Models\Client\Item;
 use App\Models\Client\GRN;
 use Illuminate\Support\Facades\DB;
+use App\Services\BillingUsageService;
 
 class InventoryMovementService
 {
+    protected $billingUsage;
+
+    public function __construct(BillingUsageService $billingUsage)
+    {
+        $this->billingUsage = $billingUsage;
+    }
     /**
      * Transfer items from one bin to another
+     * @param string $fromBinId Source bin ID
+     * @param string $toBinId Destination bin ID
+     * @param string $itemId Item ID
+     * @param float $quantity Quantity to transfer
+     * @param string|null $batchId Batch ID (optional)
+     * @param string|null $referenceDoc Reference document (optional)
+     * @param string|null $notes Notes (optional)
+     * @param string|null $fromInventoryId Specific inventory record ID to transfer from (optional)
      */
-    public function transfer($fromBinId, $toBinId, $itemId, $quantity, $batchId = null, $referenceDoc = null, $notes = null)
+    public function transfer($fromBinId, $toBinId, $itemId, $quantity, $batchId = null, $referenceDoc = null, $notes = null, $fromInventoryId = null)
     {
         DB::connection('tenant')->beginTransaction();
         
         try {
             // Find source inventory
-            $sourceInventory = Inventory::where('bin_id', $fromBinId)
-                ->where('item_id', $itemId)
-                ->where('status', 'available')
-                ->where('available_qty', '>=', $quantity)
-                ->first();
+            if ($fromInventoryId) {
+                // Transfer from a specific inventory record
+                $sourceInventory = Inventory::where('_id', $fromInventoryId)
+                    ->where('bin_id', $fromBinId)
+                    ->where('item_id', $itemId)
+                    ->where('status', 'available')
+                    ->first();
 
-            if (!$sourceInventory) {
-                throw new \Exception('Insufficient inventory in source bin');
+                if (!$sourceInventory) {
+                    throw new \Exception('Source inventory record not found or not available');
+                }
+
+                if ($sourceInventory->available_qty < $quantity) {
+                    throw new \Exception('Insufficient inventory in source bin. Available: ' . $sourceInventory->available_qty . ', Required: ' . $quantity);
+                }
+            } else {
+                // Transfer from any inventory record in the bin (original behavior)
+                $sourceInventory = Inventory::where('bin_id', $fromBinId)
+                    ->where('item_id', $itemId)
+                    ->where('status', 'available')
+                    ->where('available_qty', '>=', $quantity)
+                    ->first();
+
+                if (!$sourceInventory) {
+                    throw new \Exception('Insufficient inventory in source bin');
+                }
             }
 
             // Validate destination bin capacity
@@ -112,6 +145,9 @@ class InventoryMovementService
             ]);
 
             DB::connection('tenant')->commit();
+
+            // Record billing usage for a transfer transaction
+            $this->billingUsage->recordTransactionEvent(1);
             
             return [
                 'success' => true,
@@ -181,6 +217,9 @@ class InventoryMovementService
             ]);
 
             DB::connection('tenant')->commit();
+
+            // Record billing usage for a pick transaction
+            $this->billingUsage->recordTransactionEvent(1);
             
             return [
                 'success' => true,
@@ -255,11 +294,32 @@ class InventoryMovementService
                     'created_by' => session('user._id'),
                 ];
 
-                // Add barcode/QR/RFID codes if provided
+                // Add barcode/QR/RFID codes if provided, with uniqueness validation
                 if ($codes) {
-                    $inventoryData['barcode'] = $codes['barcode'] ?? null;
-                    $inventoryData['qr_code'] = $codes['qr_code'] ?? null;
-                    $inventoryData['rfid_tag'] = $codes['rfid_tag'] ?? null;
+                    // Validate uniqueness before creating
+                    if (isset($codes['barcode']) && $codes['barcode']) {
+                        $barcodeExists = Inventory::where('barcode', $codes['barcode'])->exists();
+                        if ($barcodeExists) {
+                            throw new \Exception('Barcode already exists: ' . $codes['barcode']);
+                        }
+                        $inventoryData['barcode'] = $codes['barcode'];
+                    }
+                    
+                    if (isset($codes['qr_code']) && $codes['qr_code']) {
+                        $qrCodeExists = Inventory::where('qr_code', $codes['qr_code'])->exists();
+                        if ($qrCodeExists) {
+                            throw new \Exception('QR code already exists: ' . $codes['qr_code']);
+                        }
+                        $inventoryData['qr_code'] = $codes['qr_code'];
+                    }
+                    
+                    if (isset($codes['rfid_tag']) && $codes['rfid_tag']) {
+                        $rfidTagExists = Inventory::where('rfid_tag', $codes['rfid_tag'])->exists();
+                        if ($rfidTagExists) {
+                            throw new \Exception('RFID tag already exists: ' . $codes['rfid_tag']);
+                        }
+                        $inventoryData['rfid_tag'] = $codes['rfid_tag'];
+                    }
                 }
 
                 $inventory = Inventory::create($inventoryData);
@@ -290,6 +350,9 @@ class InventoryMovementService
             ]);
 
             DB::connection('tenant')->commit();
+
+            // Record billing usage for a putaway transaction
+            $this->billingUsage->recordTransactionEvent(1);
             
             return [
                 'success' => true,
@@ -388,6 +451,9 @@ class InventoryMovementService
             ]);
 
             DB::connection('tenant')->commit();
+
+            // Record billing usage for a stock adjustment transaction
+            $this->billingUsage->recordTransactionEvent(1);
             
             return [
                 'success' => true,
@@ -457,7 +523,13 @@ class InventoryMovementService
             ]);
 
             DB::connection('tenant')->commit();
+
+            // Record billing usage for a QC hold transaction
+            $this->billingUsage->recordTransactionEvent(1);
             
+            // Record billing usage for a QC release transaction
+            $this->billingUsage->recordTransactionEvent(1);
+
             return [
                 'success' => true,
                 'inventory' => $inventory

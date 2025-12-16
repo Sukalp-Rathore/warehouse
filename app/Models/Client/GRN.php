@@ -14,15 +14,19 @@ class GRN extends Model
 
     protected $fillable = [
         'grn_number',
+        'sap_grn_id', // SAP GRN ID for syncing
         'vendor_id',
         'warehouse_id',
         'po_reference',
-        'status', // pending, in_progress, completed, cancelled
+        'status', // pending, approved, in_progress, completed, cancelled
         'items', // array of items with quantities
         'putaway_status', // pending, in_progress, completed
         'received_by',
         'approved_by',
+        'approved_at',
         'notes',
+        'sap_data', // Full SAP data for reference
+        'sap_synced_at', // Last sync time from SAP
         'created_by'
     ];
 
@@ -146,11 +150,19 @@ class GRN extends Model
     }
 
     /**
-     * Scope for pending GRNs
+     * Scope for pending approval GRNs
      */
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
+    }
+
+    /**
+     * Scope for approved GRNs
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
     }
 
     /**

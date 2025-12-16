@@ -27,26 +27,11 @@
                         </div>
                     @endif
 
-                    <form method="GET" class="mb-4">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label">Warehouse</label>
-                                <select name="warehouse_id" class="form-select" onchange="this.form.submit()">
-                                    <option value="">All Warehouses</option>
-                                    @foreach($warehouses as $wh)
-                                        <option value="{{ $wh->_id }}" {{ request('warehouse_id') == $wh->_id ? 'selected' : '' }}>
-                                            {{ $wh->warehouse_name }} ({{ $wh->warehouse_code }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-8 text-end">
-                                <button type="button" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#createForm">
-                                    <i class="ri-add-line me-1"></i> Add Storage Type
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                    <div class="mb-4 d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#createForm">
+                            <i class="ri-add-line me-1"></i> Add Storage Type
+                        </button>
+                    </div>
 
                     <div id="createForm" class="collapse mb-4">
                         <div class="card card-body">
@@ -71,18 +56,6 @@
                                         </select>
                                         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Warehouse<span class="text-danger">*</span></label>
-                                        <select name="warehouse_id" class="form-select @error('warehouse_id') is-invalid @enderror" required>
-                                            <option value="">Select</option>
-                                            @foreach($warehouses as $wh)
-                                                <option value="{{ $wh->_id }}" {{ old('warehouse_id', request('warehouse_id')) == $wh->_id ? 'selected' : '' }}>
-                                                    {{ $wh->warehouse_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('warehouse_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
                                     <div class="col-md-12">
                                         <label class="form-label">Description</label>
                                         <input type="text" name="description" class="form-control @error('description') is-invalid @enderror" value="{{ old('description') }}">
@@ -101,7 +74,6 @@
                                 <tr>
                                     <th>Code</th>
                                     <th>Name</th>
-                                    <th>Warehouse</th>
                                     <th>Description</th>
                                     <th>Actions</th>
                                 </tr>
@@ -111,7 +83,6 @@
                                 <tr>
                                     <td><span class="badge bg-secondary">{{ $st->code }}</span></td>
                                     <td>{{ $st->name }}</td>
-                                    <td>{{ $st->warehouse->warehouse_name ?? 'N/A' }}</td>
                                     <td>{{ $st->description ?? '-' }}</td>
                                     <td>
                                         <form class="d-inline" method="POST" action="{{ route('tenant.storage-types.update', $st->_id) }}">
@@ -130,7 +101,7 @@
                                     </td>
                                 </tr>
                                 @empty
-                                <tr><td colspan="5" class="text-center">No storage types found.</td></tr>
+                                <tr><td colspan="4" class="text-center">No storage types found.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>

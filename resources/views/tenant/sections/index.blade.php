@@ -63,20 +63,21 @@
 
                     <div id="createForm" class="collapse mb-4">
                         <div class="card card-body bg-light">
-                            <h6 class="mb-3">Create New Section (High Rack Only)</h6>
-                            <form method="POST" action="{{ route('tenant.sections.store') }}">
+                            <h6 class="mb-3">Create New Section (High Rack Only) - 2D Grid Format</h6>
+                            <form method="POST" action="{{ route('tenant.sections.store') }}" id="sectionCreateForm">
                                 @csrf
                                 <div class="row g-3">
                                     <div class="col-md-3">
                                         <label class="form-label">Section Code <span class="text-danger">*</span></label>
                                         <input type="text" name="section_code" class="form-control @error('section_code') is-invalid @enderror" 
-                                               value="{{ old('section_code') }}" placeholder="e.g., R1" required>
+                                               value="{{ old('section_code') }}" placeholder="e.g., SEC1" required>
                                         @error('section_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <small class="form-text text-muted">Unique code for this section</small>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label">Section Name <span class="text-danger">*</span></label>
                                         <input type="text" name="section_name" class="form-control @error('section_name') is-invalid @enderror" 
-                                               value="{{ old('section_name') }}" placeholder="e.g., Rack Row 1" required>
+                                               value="{{ old('section_name') }}" placeholder="e.g., Section 1" required>
                                         @error('section_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-3">
@@ -106,6 +107,49 @@
                                             <small class="text-danger">No High Rack storage types found. Create one first.</small>
                                         @endif
                                     </div>
+                                    
+                                    <div class="col-12">
+                                        <hr>
+                                        <h6 class="mb-3">Grid Configuration</h6>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label class="form-label">Number of Rows <span class="text-danger">*</span></label>
+                                        <input type="number" name="rows" id="rows" class="form-control @error('rows') is-invalid @enderror" 
+                                               value="{{ old('rows', 1) }}" min="1" max="100" required oninput="calculateTotalBins()">
+                                        @error('rows')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <small class="form-text text-muted">Rows will be numbered: r1, r2, r3...</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Number of Columns <span class="text-danger">*</span></label>
+                                        <input type="number" name="columns" id="columns" class="form-control @error('columns') is-invalid @enderror" 
+                                               value="{{ old('columns', 1) }}" min="1" max="100" required oninput="calculateTotalBins()">
+                                        @error('columns')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <small class="form-text text-muted">Columns will be numbered: c1, c2, c3...</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Bin Volume (per bin) <span class="text-danger">*</span></label>
+                                        <input type="number" name="bin_volume" class="form-control @error('bin_volume') is-invalid @enderror" 
+                                               value="{{ old('bin_volume', 1.0) }}" step="0.01" min="0.1" required>
+                                        @error('bin_volume')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <small class="form-text text-muted">Volume capacity for each bin</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Bin Weight (per bin) <span class="text-danger">*</span></label>
+                                        <input type="number" name="bin_weight" class="form-control @error('bin_weight') is-invalid @enderror" 
+                                               value="{{ old('bin_weight', 100.0) }}" step="0.01" min="0.1" required>
+                                        @error('bin_weight')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <small class="form-text text-muted">Weight capacity for each bin</small>
+                                    </div>
+                                    
+                                    <div class="col-md-12">
+                                        <div class="alert alert-info mb-0">
+                                            <strong>Total Bins:</strong> <span id="totalBins">1</span> bins will be created automatically
+                                            <br>
+                                            <small>Bin codes will follow the pattern: {SectionCode}-r{row}c{column} (e.g., SEC1-r1c1, SEC1-r1c2)</small>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="col-md-3">
                                         <label class="form-label">Zone Code</label>
                                         <input type="text" name="zone_code" class="form-control @error('zone_code') is-invalid @enderror" 
@@ -121,11 +165,25 @@
                                 </div>
                                 <div class="text-end mt-3">
                                     <button type="button" class="btn btn-secondary me-2" data-bs-toggle="collapse" data-bs-target="#createForm">Cancel</button>
-                                    <button type="submit" class="btn btn-primary">Create Section</button>
+                                    <button type="submit" class="btn btn-primary">Create Section & Generate Bins</button>
                                 </div>
                             </form>
                         </div>
                     </div>
+                    
+                    <script>
+                        function calculateTotalBins() {
+                            const rows = parseInt(document.getElementById('rows').value) || 0;
+                            const columns = parseInt(document.getElementById('columns').value) || 0;
+                            const total = rows * columns;
+                            document.getElementById('totalBins').textContent = total;
+                        }
+                        
+                        // Calculate on page load
+                        document.addEventListener('DOMContentLoaded', function() {
+                            calculateTotalBins();
+                        });
+                    </script>
 
                     <div class="table-responsive">
                         <table class="table table-striped">
@@ -135,6 +193,10 @@
                                     <th>Name</th>
                                     <th>Warehouse</th>
                                     <th>Storage Type</th>
+                                    <th>Grid Size</th>
+                                    <th>Total Bins</th>
+                                    <th>Bin Volume</th>
+                                    <th>Bin Weight</th>
                                     <th>Zone</th>
                                     <th>Actions</th>
                                 </tr>
@@ -146,10 +208,26 @@
                                         <td>{{ $sec->section_name }}</td>
                                         <td>{{ optional(\App\Models\Client\Warehouse::find($sec->warehouse_id))->warehouse_name }}</td>
                                         <td>{{ optional(\App\Models\Client\StorageType::find($sec->storage_type_id))->name }}</td>
+                                        <td>
+                                            @if($sec->rows && $sec->columns)
+                                                <span class="badge bg-info">{{ $sec->rows }} × {{ $sec->columns }}</span>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($sec->rows && $sec->columns)
+                                                <strong>{{ $sec->rows * $sec->columns }}</strong>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $sec->bin_volume ?? '-' }}</td>
+                                        <td>{{ $sec->bin_weight ?? '-' }}</td>
                                         <td>{{ $sec->zone_code ?? '-' }}</td>
                                         <td>
                                             <form class="d-inline" method="POST" action="{{ route('tenant.sections.destroy', $sec->_id) }}" 
-                                                  onsubmit="return confirm('Delete this section?');">
+                                                  onsubmit="return confirm('Delete this section and all its bins? This action cannot be undone.');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger">
@@ -159,7 +237,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="6" class="text-center">No sections found. Create one using the "Create Section" button above.</td></tr>
+                                    <tr><td colspan="10" class="text-center">No sections found. Create one using the "Create Section" button above.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>

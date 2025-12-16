@@ -35,15 +35,12 @@ class StorageTypeController extends Controller
         return response()->json($sectionsArray);
     }
     /**
-     * Return storage types as JSON for a given warehouse (used by AJAX in bin form)
+     * Return storage types as JSON (used by AJAX in bin form)
+     * Storage types are master data and can be assigned to any warehouse
      */
     public function list(Request $request)
     {
-        $request->validate([
-            'warehouse_id' => 'required|string'
-        ]);
-
-        $types = StorageType::active()->byWarehouse($request->warehouse_id)->get(['_id','code','name']);
+        $types = StorageType::active()->get(['_id','code','name']);
 
         // Convert MongoDB ObjectId to string for JSON response
         $typesArray = $types->map(function($type) {
@@ -64,11 +61,6 @@ class StorageTypeController extends Controller
     {
         $query = StorageType::query();
 
-        // Filter by warehouse
-        if ($request->filled('warehouse_id')) {
-            $query->where('warehouse_id', $request->warehouse_id);
-        }
-
         // Search
         if ($request->filled('search')) {
             $search = $request->search;
@@ -78,10 +70,9 @@ class StorageTypeController extends Controller
             });
         }
 
-        $storageTypes = $query->with('warehouse')->paginate(15);
-        $warehouses = Warehouse::active()->get();
+        $storageTypes = $query->orderBy('code')->paginate(15);
 
-        return view('tenant.storage-types.index', compact('storageTypes', 'warehouses'));
+        return view('tenant.storage-types.index', compact('storageTypes'));
     }
 
     /**
@@ -93,15 +84,7 @@ class StorageTypeController extends Controller
             'code' => 'required|string|in:HIGH_RACK,COLD_ROOM|max:50',
             'name' => 'required|string|in:High Rack,Cold Room|max:255',
             'description' => 'nullable|string|max:500',
-            'warehouse_id' => 'required|string',
         ]);
-
-        // Mongo-safe existence check
-        $validator->after(function ($v) use ($request) {
-            if (!$request->filled('warehouse_id') || !Warehouse::find($request->warehouse_id)) {
-                $v->errors()->add('warehouse_id', 'Selected warehouse is invalid.');
-            }
-        });
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -114,20 +97,9 @@ class StorageTypeController extends Controller
                 'code' => strtoupper($request->code),
                 'name' => $request->name,
                 'description' => $request->description,
-                'warehouse_id' => $request->warehouse_id,
                 'status' => 'active',
                 'is_active' => true,
             ]);
-
-            // Add to warehouse's storage_types array
-            $warehouse = Warehouse::find($request->warehouse_id);
-            if ($warehouse) {
-                $storageTypes = $warehouse->storage_types ?? [];
-                if (!in_array($storageType->_id, $storageTypes)) {
-                    $storageTypes[] = $storageType->_id;
-                    $warehouse->update(['storage_types' => $storageTypes]);
-                }
-            }
 
             return redirect()->back()
                 ->with('success', 'Storage type created successfully.');

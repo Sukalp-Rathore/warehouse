@@ -3,11 +3,21 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\StripeWebhookController;
 // Auth Routes 
 Route::middleware(['web'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
     Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+});
+
+// Stripe Webhook (no auth; secured via Stripe webhook secret)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+
+// Plant & Warehouse Selection Routes (must be before other protected routes)
+Route::middleware(['web', 'custom_auth'])->group(function () {
+    Route::get('/select-plant-warehouse', [App\Http\Controllers\PlantWarehouseSelectionController::class, 'show'])->name('plant-warehouse.select');
+    Route::post('/select-plant-warehouse', [App\Http\Controllers\PlantWarehouseSelectionController::class, 'store'])->name('plant-warehouse.select');
 });
 
 // Test route without middleware
@@ -396,8 +406,8 @@ Route::middleware(['web', 'custom_auth'])->group(function () {
     });
 });
 
-// Dashboard - Apply tenant_configured middleware (middleware will skip for master admins)
-Route::middleware(['web', 'custom_auth', 'tenant_configured'])->group(function () {
+// Dashboard - Apply tenant_configured and plant/warehouse selection middleware
+Route::middleware(['web', 'custom_auth', 'tenant_configured', 'require_plant_warehouse'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
@@ -408,7 +418,18 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only'])->prefix('tenant')
 });
 
 // Tenant User Management Routes (Only accessible by tenant admins) - MUST BE BEFORE tenant management routes
-Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured'])->prefix('tenant')->group(function () {
+Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured', 'require_plant_warehouse'])->prefix('tenant')->group(function () {
+    
+    // Permission Management
+    Route::resource('permissions', App\Http\Controllers\TenantPermissionController::class)->except(['show'])->names([
+        'index' => 'tenant.permissions.index',
+        'create' => 'tenant.permissions.create',
+        'store' => 'tenant.permissions.store',
+        'edit' => 'tenant.permissions.edit',
+        'update' => 'tenant.permissions.update',
+        'destroy' => 'tenant.permissions.destroy'
+    ]);
+    Route::patch('/permissions/{id}/toggle-status', [App\Http\Controllers\TenantPermissionController::class, 'toggleStatus'])->name('tenant.permissions.toggle-status');
     
     // User Management
     Route::get('/users', [App\Http\Controllers\TenantUserController::class, 'index'])->name('tenant.users.index');
@@ -505,6 +526,7 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
     // Item Location Search - Must be BEFORE resource route
     Route::get('/items/locate', [App\Http\Controllers\ItemLocationController::class, 'locate'])->name('tenant.items.locate');
     Route::get('/items/locate/search', [App\Http\Controllers\ItemLocationController::class, 'search'])->name('tenant.items.locate.search');
+    Route::get('/items/locate/live-search', [App\Http\Controllers\ItemLocationController::class, 'liveSearch'])->name('tenant.items.locate.live-search');
     
     // Item resource route
     Route::resource('items', App\Http\Controllers\ItemController::class)->names([
@@ -524,7 +546,9 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
     Route::get('/inventory', [App\Http\Controllers\InventoryController::class, 'index'])->name('tenant.inventory.index');
     Route::get('/inventory/create', [App\Http\Controllers\InventoryController::class, 'create'])->name('tenant.inventory.create');
     Route::post('/inventory', [App\Http\Controllers\InventoryController::class, 'store'])->name('tenant.inventory.store');
+    // AJAX routes must come before parameterized routes to avoid route conflicts
     Route::get('/inventory/get-bins-for-putaway', [App\Http\Controllers\InventoryController::class, 'getBinsForPutaway'])->name('tenant.inventory.get-bins-for-putaway');
+    Route::get('/inventory/get-destination-bins-for-transfer', [App\Http\Controllers\InventoryController::class, 'getDestinationBinsForTransfer'])->name('tenant.inventory.get-destination-bins-for-transfer');
     Route::get('/inventory/{id}', [App\Http\Controllers\InventoryController::class, 'show'])->name('tenant.inventory.show');
     Route::get('/inventory/{id}/transfer', [App\Http\Controllers\InventoryController::class, 'transferForm'])->name('tenant.inventory.transfer');
     Route::post('/inventory/{id}/transfer', [App\Http\Controllers\InventoryController::class, 'transfer'])->name('tenant.inventory.transfer.store');
@@ -533,10 +557,9 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
     Route::post('/inventory/{id}/qc-hold', [App\Http\Controllers\InventoryController::class, 'qcHold'])->name('tenant.inventory.qc-hold');
     Route::post('/inventory/{id}/qc-release', [App\Http\Controllers\InventoryController::class, 'qcRelease'])->name('tenant.inventory.qc-release');
     
-    // GRN Management
+    // GRN Management (SAP Integrated)
     Route::get('/grns', [App\Http\Controllers\GRNController::class, 'index'])->name('tenant.grns.index');
-    Route::get('/grns/create', [App\Http\Controllers\GRNController::class, 'create'])->name('tenant.grns.create');
-    Route::post('/grns', [App\Http\Controllers\GRNController::class, 'store'])->name('tenant.grns.store');
+    Route::post('/grns/sync-from-sap', [App\Http\Controllers\GRNController::class, 'syncFromSAP'])->name('tenant.grns.sync-from-sap');
     Route::get('/grns/{id}', [App\Http\Controllers\GRNController::class, 'show'])->name('tenant.grns.show');
     Route::post('/grns/{id}/approve', [App\Http\Controllers\GRNController::class, 'approve'])->name('tenant.grns.approve');
     Route::get('/grns/{id}/putaway', [App\Http\Controllers\GRNController::class, 'putaway'])->name('tenant.grns.putaway');
@@ -553,6 +576,7 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
     
     // Transfer Order Management
     Route::get('/transfer-orders/get-bins-for-item', [App\Http\Controllers\TransferOrderController::class, 'getBinsForItem'])->name('tenant.transfer-orders.get-bins-for-item');
+    Route::get('/transfer-orders/get-destination-bins', [App\Http\Controllers\TransferOrderController::class, 'getDestinationBins'])->name('tenant.transfer-orders.get-destination-bins');
 
     Route::resource('transfer-orders', App\Http\Controllers\TransferOrderController::class)->names([
         'index' => 'tenant.transfer-orders.index',
@@ -580,6 +604,9 @@ Route::middleware(['web', 'custom_auth', 'tenant_admin_only', 'tenant_configured
         'destroy' => 'tenant.delivery-orders.destroy'
     ]);
     Route::post('/delivery-orders/{id}/generate-picking', [App\Http\Controllers\DeliveryOrderController::class, 'generatePickingTasks'])->name('tenant.delivery-orders.generate-picking');
+
+    // Tenant Billing (visible to tenant admins)
+    Route::get('/billing', [App\Http\Controllers\TenantBillingController::class, 'index'])->name('tenant.billing.index');
 });
 
 // Tenant Management Routes - Only accessible to master admin users
@@ -594,4 +621,8 @@ Route::middleware(['web', 'custom_auth', 'master_admin'])->group(function () {
     Route::get('/tenant/{clientId}/edit', [App\Http\Controllers\TenantOnboardingController::class, 'edit'])->name('tenant.edit');
     Route::put('/tenant/{clientId}', [App\Http\Controllers\TenantOnboardingController::class, 'update'])->name('tenant.update');
     Route::delete('/tenant/{clientId}', [App\Http\Controllers\TenantOnboardingController::class, 'destroy'])->name('tenant.destroy');
+
+    // Billing overview for tenants (platform admin)
+    Route::get('/billing/tenants', [App\Http\Controllers\TenantBillingAdminController::class, 'index'])->name('billing.tenants.index');
+    Route::get('/billing/tenants/{clientId}', [App\Http\Controllers\TenantBillingAdminController::class, 'show'])->name('billing.tenants.show');
 });

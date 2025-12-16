@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Client\Role;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Validator;
 
 class TenantRoleController extends Controller
@@ -22,25 +23,7 @@ class TenantRoleController extends Controller
      */
     public function create()
     {
-        // Define available permissions
-        $availablePermissions = [
-            'warehouse.view' => 'View Warehouse',
-            'warehouse.create' => 'Create Warehouse',
-            'warehouse.edit' => 'Edit Warehouse',
-            'warehouse.delete' => 'Delete Warehouse',
-            'inventory.view' => 'View Inventory',
-            'inventory.create' => 'Create Inventory',
-            'inventory.edit' => 'Edit Inventory',
-            'inventory.delete' => 'Delete Inventory',
-            'reports.view' => 'View Reports',
-            'reports.export' => 'Export Reports',
-            'users.view' => 'View Users',
-            'users.create' => 'Create Users',
-            'users.edit' => 'Edit Users',
-            'users.delete' => 'Delete Users',
-            'settings.view' => 'View Settings',
-            'settings.edit' => 'Edit Settings',
-        ];
+        $availablePermissions = PermissionHelper::getAvailablePermissions();
         
         return view('tenant.roles.create', compact('availablePermissions'));
     }
@@ -109,26 +92,7 @@ class TenantRoleController extends Controller
     public function edit($id)
     {
         $role = Role::findOrFail($id);
-        
-        // Define available permissions
-        $availablePermissions = [
-            'warehouse.view' => 'View Warehouse',
-            'warehouse.create' => 'Create Warehouse',
-            'warehouse.edit' => 'Edit Warehouse',
-            'warehouse.delete' => 'Delete Warehouse',
-            'inventory.view' => 'View Inventory',
-            'inventory.create' => 'Create Inventory',
-            'inventory.edit' => 'Edit Inventory',
-            'inventory.delete' => 'Delete Inventory',
-            'reports.view' => 'View Reports',
-            'reports.export' => 'Export Reports',
-            'users.view' => 'View Users',
-            'users.create' => 'Create Users',
-            'users.edit' => 'Edit Users',
-            'users.delete' => 'Delete Users',
-            'settings.view' => 'View Settings',
-            'settings.edit' => 'Edit Settings',
-        ];
+        $availablePermissions = PermissionHelper::getAvailablePermissions();
         
         return view('tenant.roles.edit', compact('role', 'availablePermissions'));
     }

@@ -170,6 +170,32 @@
 
                 <!-- Start::header-content-right -->
                 <ul class="header-content-right">
+                    @if(session('tenant_type') === 'client' && session('selected_plant_id') && session('selected_warehouse_id'))
+                        <li class="header-element">
+                            <div class="header-link d-flex align-items-center gap-2 text-white">
+                                <i class="ri-building-line"></i>
+                                <span class="d-none d-md-inline">
+                                    <small class="d-block text-muted" style="font-size: 0.7rem;">Plant</small>
+                                    <span style="font-size: 0.85rem;">{{ session('selected_plant_name') }}</span>
+                                </span>
+                            </div>
+                        </li>
+                        <li class="header-element">
+                            <div class="header-link d-flex align-items-center gap-2 text-white">
+                                <i class="ri-store-3-line"></i>
+                                <span class="d-none d-md-inline">
+                                    <small class="d-block text-muted" style="font-size: 0.7rem;">Warehouse</small>
+                                    <span style="font-size: 0.85rem;">{{ session('selected_warehouse_name') }}</span>
+                                </span>
+                            </div>
+                        </li>
+                        <li class="header-element">
+                            <a href="{{ route('plant-warehouse.select') }}" class="header-link text-white" title="Change Plant/Warehouse">
+                                <i class="ri-refresh-line"></i>
+                                <span class="d-none d-md-inline ms-1">Change</span>
+                            </a>
+                        </li>
+                    @endif
                     <!-- Start::header-element -->
                     <li class="header-element dropdown">
                         <!-- Start::header-link|dropdown-toggle -->
@@ -249,9 +275,13 @@
                         </li>
                         @endif
 
-                        @if(session('authenticated') && session('tenant_type') === 'client' && 
-                            (isset(session('user')['role']) && (strtolower(session('user')['role']) === 'admin' || strtolower(session('user')['role']) === 'administrator')) ||
-                            (isset(session('user')['permissions']) && in_array('all', session('user')['permissions'])))
+                        @php
+                            $sessionUser = session('user') ?? [];
+                            $isTenantAdmin = isset($sessionUser['role']) && in_array(strtolower($sessionUser['role']), ['admin', 'administrator']);
+                            $hasAllPermission = isset($sessionUser['permissions']) && in_array('all', $sessionUser['permissions']);
+                        @endphp
+
+                        @if(session('authenticated') && session('tenant_type') === 'client' && ($isTenantAdmin || $hasAllPermission))
                         <!-- User Management Section for Tenant Admins -->
                         <li class="slide">
                             <a href="{{ route('tenant.users.index') }}"
@@ -265,6 +295,13 @@
                                 class="side-menu__item {{ str_contains(url()->current(), '/tenant/roles') ? 'active' : '' }}">
                                 <i class="bi bi-shield-check w-7 h-7 side-menu__icon"></i>
                                 <span class="side-menu__label">Role Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.permissions.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/permissions') ? 'active' : '' }}">
+                                <i class="bi bi-key w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Permission Management</span>
                             </a>
                         </li>
                         <li class="slide">
@@ -295,13 +332,14 @@
                                 <span class="side-menu__label">Sections</span>
                             </a>
                         </li>
-                        <li class="slide">
+                        {{-- Bin Management - Hidden as bins are now managed through Sections (2D Grid) --}}
+                        {{-- <li class="slide">
                             <a href="{{ route('tenant.bins.index') }}"
                                 class="side-menu__item {{ str_contains(url()->current(), '/tenant/bins') ? 'active' : '' }}">
                                 <i class="bi bi-box w-7 h-7 side-menu__icon"></i>
                                 <span class="side-menu__label">Bin Management</span>
                             </a>
-                        </li>
+                        </li> --}}
                         <li class="slide">
                             <a href="{{ route('tenant.vendors.index') }}"
                                 class="side-menu__item {{ str_contains(url()->current(), '/tenant/vendors') ? 'active' : '' }}">
@@ -363,6 +401,13 @@
                                 class="side-menu__item {{ str_contains(url()->current(), '/tenant/batches') ? 'active' : '' }}">
                                 <i class="bi bi-tags w-7 h-7 side-menu__icon"></i>
                                 <span class="side-menu__label">Batch Management</span>
+                            </a>
+                        </li>
+                        <li class="slide">
+                            <a href="{{ route('tenant.billing.index') }}"
+                                class="side-menu__item {{ str_contains(url()->current(), '/tenant/billing') ? 'active' : '' }}">
+                                <i class="bi bi-credit-card w-7 h-7 side-menu__icon"></i>
+                                <span class="side-menu__label">Billing</span>
                             </a>
                         </li>
                         @endif

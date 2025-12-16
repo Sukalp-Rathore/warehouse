@@ -70,8 +70,7 @@
                                     <th>Description</th>
                                     <th>Category</th>
                                     <th>UOM</th>
-                                    <th>Vendor</th>
-                                    <th>Price</th>
+                                    <th>Vendors</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -83,8 +82,18 @@
                                         <td>{{ $item->description }}</td>
                                         <td>{{ $item->category ?? 'N/A' }}</td>
                                         <td>{{ $item->uom }}</td>
-                                        <td>{{ $item->vendor->vendor_name ?? 'N/A' }}</td>
-                                        <td>{{ $item->currency ?? 'USD' }} {{ number_format($item->unit_price ?? 0, 2) }}</td>
+                                        <td>
+                                            @if($item->vendor_ids && count($item->vendor_ids) > 0)
+                                                @php
+                                                    $vendors = \App\Models\Client\Vendor::whereIn('_id', $item->vendor_ids)->get();
+                                                @endphp
+                                                @foreach($vendors as $vendor)
+                                                    <span class="badge bg-secondary me-1">{{ $vendor->vendor_name }}</span>
+                                                @endforeach
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @if($item->is_active)
                                                 <span class="badge bg-success">Active</span>

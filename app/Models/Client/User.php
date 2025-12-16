@@ -20,8 +20,10 @@ class User extends Model implements UserContract
         'password',
         'mobile',
         'role_id',
+        'role',
         'permissions',
         'plant_access',
+        'warehouse_access',
         'status',
         'client_id',
         'name',
@@ -38,6 +40,7 @@ class User extends Model implements UserContract
         'password' => 'hashed',
         'permissions' => 'array',
         'plant_access' => 'array',
+        'warehouse_access' => 'array',
     ];
 
     /**
@@ -60,6 +63,19 @@ class User extends Model implements UserContract
             return collect();
         }
         return Plant::whereIn('_id', $plantIds)->get();
+    }
+
+    /**
+     * Get warehouses the user has access to
+     * Note: This is a helper method, not a relationship, since warehouse_access is an array
+     */
+    public function getWarehousesAttribute()
+    {
+        $warehouseIds = $this->attributes['warehouse_access'] ?? $this->warehouse_access ?? [];
+        if (empty($warehouseIds)) {
+            return collect();
+        }
+        return Warehouse::whereIn('_id', $warehouseIds)->get();
     }
 
     /**
@@ -127,6 +143,38 @@ class User extends Model implements UserContract
         $plantAccess = $this->plant_access ?? [];
         $plantAccess = array_diff($plantAccess, [$plantId]);
         $this->plant_access = array_values($plantAccess);
+        $this->save();
+    }
+
+    /**
+     * Check if user has access to specific warehouse
+     */
+    public function hasWarehouseAccess($warehouseId)
+    {
+        return in_array($warehouseId, $this->warehouse_access ?? []);
+    }
+
+    /**
+     * Add warehouse access to user
+     */
+    public function addWarehouseAccess($warehouseId)
+    {
+        $warehouseAccess = $this->warehouse_access ?? [];
+        if (!in_array($warehouseId, $warehouseAccess)) {
+            $warehouseAccess[] = $warehouseId;
+            $this->warehouse_access = $warehouseAccess;
+            $this->save();
+        }
+    }
+
+    /**
+     * Remove warehouse access from user
+     */
+    public function removeWarehouseAccess($warehouseId)
+    {
+        $warehouseAccess = $this->warehouse_access ?? [];
+        $warehouseAccess = array_diff($warehouseAccess, [$warehouseId]);
+        $this->warehouse_access = array_values($warehouseAccess);
         $this->save();
     }
 

@@ -19,6 +19,10 @@ class Section extends Model
         'warehouse_id',
         'zone_code',
         'description',
+        'rows',
+        'columns',
+        'bin_volume',
+        'bin_weight',
         'status',
         'is_active',
         'created_by'
@@ -26,6 +30,10 @@ class Section extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'rows' => 'integer',
+        'columns' => 'integer',
+        'bin_volume' => 'decimal:2',
+        'bin_weight' => 'decimal:2',
     ];
 
     protected $dates = [
@@ -87,6 +95,28 @@ class Section extends Model
     public function scopeByZone($query, $zoneCode)
     {
         return $query->where('zone_code', $zoneCode);
+    }
+
+    /**
+     * Get total number of bins in this section (rows * columns)
+     */
+    public function getTotalBinsAttribute()
+    {
+        if ($this->rows && $this->columns) {
+            return $this->rows * $this->columns;
+        }
+        return 0;
+    }
+
+    /**
+     * Get bin at specific grid position
+     */
+    public function getBinAtPosition($row, $column)
+    {
+        return Bin::where('section_id', $this->_id)
+                  ->where('row_number', $row)
+                  ->where('column_number', $column)
+                  ->first();
     }
 }
 

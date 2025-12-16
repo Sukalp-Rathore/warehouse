@@ -4,10 +4,12 @@ namespace App\Models\Master;
 
 use MongoDB\Laravel\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Cashier\Billable;
 
 class Client extends Model
 {
     use HasFactory;
+    use Billable;
 
     protected $connection = 'master';
     protected $collection = 'clients';
@@ -25,12 +27,22 @@ class Client extends Model
         'users',
         'record_type', // 'tenant' or 'user'
         'user_id',     // reference to tenant users._id when record_type='user'
+        // Billing / Cashier fields
+        'stripe_id',
+        'pm_type',
+        'pm_last_four',
+        'trial_ends_at',
+        'billing_status', // active, past_due, canceled, trialing, etc.
+        'billing_plan',   // internal plan key from config/plans.php
+        'billing_metadata',
     ];
 
     protected $casts = [
         'max_warehouses' => 'integer',
         'max_users' => 'integer',
         'users' => 'array',
+        'trial_ends_at' => 'datetime',
+        'billing_metadata' => 'array',
     ];
 
     public function isActive()

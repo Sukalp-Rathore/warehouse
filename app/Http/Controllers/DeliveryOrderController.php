@@ -50,8 +50,19 @@ class DeliveryOrderController extends Controller
             $query->where('warehouse_id', $request->warehouse_id);
         }
 
+        // Apply warehouse filter from session
+        $query = \App\Services\DataFilteringService::filterByWarehouse($query);
+
         $deliveryOrders = $query->orderBy('created_at', 'desc')->paginate(20);
-        $warehouses = Warehouse::active()->get();
+        
+        // Filter warehouses by user's warehouse access
+        $user = session('user');
+        $userWarehouseAccess = $user['warehouse_access'] ?? [];
+        $warehousesQuery = Warehouse::active();
+        if (!empty($userWarehouseAccess)) {
+            $warehousesQuery->whereIn('_id', $userWarehouseAccess);
+        }
+        $warehouses = $warehousesQuery->get();
 
         return view('tenant.delivery-orders.index', compact('deliveryOrders', 'warehouses'));
     }

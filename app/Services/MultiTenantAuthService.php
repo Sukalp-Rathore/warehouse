@@ -54,12 +54,13 @@ class MultiTenantAuthService
             // Switch to the specific client database
             $this->tenantService->setTenantConnection($userMapping->database_name);
             
-            $clientUser = ClientUser::where('email', $email)->first();
+            $clientUser = ClientUser::with('role')->where('email', $email)->first();
             if ($clientUser && Hash::check($password, $clientUser->password)) {
                 \Log::info('Client user authentication successful', [
                     'client_id' => $userMapping->client_id,
                     'database_name' => $userMapping->database_name,
-                    'user_id' => $userMapping->user_id
+                    'user_id' => $userMapping->user_id,
+                    'role' => $clientUser->role ? $clientUser->role->name : null
                 ]);
                 return [
                     'user' => $clientUser,
@@ -88,11 +89,12 @@ class MultiTenantAuthService
             // Switch to the specific client database
             $this->tenantService->setTenantConnection($client->database_name);
             
-            $clientUser = ClientUser::where('email', $email)->first();
+            $clientUser = ClientUser::with('role')->where('email', $email)->first();
             if ($clientUser && Hash::check($password, $clientUser->password)) {
                 \Log::info('Legacy tenant user authentication successful', [
                     'client_id' => $client->client_id,
-                    'database_name' => $client->database_name
+                    'database_name' => $client->database_name,
+                    'role' => $clientUser->role ? $clientUser->role->name : null
                 ]);
                 return [
                     'user' => $clientUser,

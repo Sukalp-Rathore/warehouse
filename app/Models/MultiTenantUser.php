@@ -23,6 +23,8 @@ class MultiTenantUser extends Model implements UserContract
         'name',
         'role',
         'permissions',
+        'plant_access',
+        'warehouse_access',
         'client_id',
         'tenant_type',
         'database_name'
@@ -37,6 +39,8 @@ class MultiTenantUser extends Model implements UserContract
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'permissions' => 'array',
+        'plant_access' => 'array',
+        'warehouse_access' => 'array',
     ];
 
     /**
@@ -65,12 +69,56 @@ class MultiTenantUser extends Model implements UserContract
     public static function fromClientUser(ClientUser $clientUser, $clientId, $databaseName)
     {
         $user = new self();
+        
+        // Get role name - check direct role field first, then relationship
+        $roleName = null;
+        
+        // Priority 1: Check direct 'role' field (string) from attributes
+        if (isset($clientUser->attributes['role']) && !empty($clientUser->attributes['role']) && is_string($clientUser->attributes['role'])) {
+            $roleName = $clientUser->attributes['role'];
+        }
+        // Priority 2: Check direct 'role' property access
+        elseif (property_exists($clientUser, 'role') && is_string($clientUser->role)) {
+            $roleName = $clientUser->role;
+        }
+        // Priority 3: Check if role is a relationship object
+        elseif ($clientUser->role && is_object($clientUser->role) && isset($clientUser->role->name)) {
+            $roleName = $clientUser->role->name;
+        }
+        // Priority 4: Try to load role relationship if role_id exists
+        elseif ($clientUser->role_id) {
+            try {
+                if (!$clientUser->relationLoaded('role')) {
+                    $clientUser->load('role');
+                }
+                if ($clientUser->role && is_object($clientUser->role) && isset($clientUser->role->name)) {
+                    $roleName = $clientUser->role->name;
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to load role for user', [
+                    'user_id' => $clientUser->getKey(),
+                    'role_id' => $clientUser->role_id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        \Log::info('MultiTenantUser::fromClientUser', [
+            'user_id' => $clientUser->getKey(),
+            'role_id' => $clientUser->role_id ?? 'not_set',
+            'role_direct' => $clientUser->attributes['role'] ?? 'not_set',
+            'role_name' => $roleName,
+            'role_loaded' => $clientUser->relationLoaded('role')
+        ]);
+        
         $user->fill([
             'email' => $clientUser->email,
             'password' => $clientUser->password,
             'name' => $clientUser->name,
-            'role' => $clientUser->role,
+            'role' => $roleName,
             'permissions' => $clientUser->permissions,
+            'plant_access' => $clientUser->plant_access ?? [],
+            'warehouse_access' => $clientUser->warehouse_access ?? [],
             'tenant_type' => 'client',
             'client_id' => $clientId,
             'database_name' => $databaseName

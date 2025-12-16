@@ -61,8 +61,19 @@ class BinController extends Controller
             });
         }
 
+        // Apply warehouse filter from session
+        $query = \App\Services\DataFilteringService::filterByWarehouse($query);
+
         $bins = $query->with(['warehouse', 'storageType', 'section'])->paginate(50);
-        $warehouses = Warehouse::active()->get();
+        
+        // Filter warehouses by user's warehouse access
+        $user = session('user');
+        $userWarehouseAccess = $user['warehouse_access'] ?? [];
+        $warehousesQuery = Warehouse::active();
+        if (!empty($userWarehouseAccess)) {
+            $warehousesQuery->whereIn('_id', $userWarehouseAccess);
+        }
+        $warehouses = $warehousesQuery->get();
 
         return view('tenant.bins.index', compact('bins', 'warehouses'));
     }
@@ -126,7 +137,8 @@ class BinController extends Controller
         $warehouseId = $request->warehouse_id;
         $warehouse = $warehouseId ? Warehouse::find($warehouseId) : null;
         $warehouses = Warehouse::active()->get();
-        $storageTypes = $warehouseId ? StorageType::where('warehouse_id', $warehouseId)->active()->get() : collect();
+        // Storage types are master data, available to all warehouses
+        $storageTypes = StorageType::active()->get();
         $sections = $warehouseId ? Section::where('warehouse_id', $warehouseId)->active()->get() : collect();
 
         return view('tenant.bins.create', compact('warehouses', 'warehouse', 'storageTypes', 'sections'));
@@ -168,11 +180,6 @@ class BinController extends Controller
                 if (!$storageType) {
                     $v->errors()->add('storage_type_id', 'The selected storage type id is invalid.');
                 } else {
-                    // Verify storage type belongs to the selected warehouse
-                    if ($request->filled('warehouse_id') && $storageType->warehouse_id && $storageType->warehouse_id !== $request->warehouse_id) {
-                        $v->errors()->add('storage_type_id', 'The selected storage type does not belong to the selected warehouse.');
-                    }
-                    
                     // For High Rack storage types, section_id is required
                     $isHighRack = strtolower($storageType->name) === 'high rack' || strtoupper($storageType->code) === 'HIGH_RACK';
                     if ($isHighRack && !$request->filled('section_id')) {

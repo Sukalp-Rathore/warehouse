@@ -38,7 +38,7 @@ class ItemController extends Controller
             $query->byCategory($request->category);
         }
 
-        // Filter by vendor
+        // Filter by vendor (searches in vendor_ids array)
         if ($request->filled('vendor_id')) {
             $query->byVendor($request->vendor_id);
         }
@@ -53,7 +53,7 @@ class ItemController extends Controller
             $query->hazmat();
         }
 
-        $items = $query->with(['vendor', 'preferredStorageType', 'categoryModel'])->paginate(20);
+        $items = $query->with(['preferredStorageType', 'categoryModel'])->paginate(20);
         $vendors = Vendor::active()->get();
         $categories = ItemCategory::active()->root()->get();
         $storageTypes = StorageType::active()->get();
@@ -93,13 +93,11 @@ class ItemController extends Controller
             'volume' => 'nullable|numeric|min:0',
             'preferred_storage_type_id' => 'nullable',
             'preferred_bin_id' => 'nullable',
-            'vendor_id' => 'nullable',
-            'alternate_vendors' => 'nullable|array',
+            'vendor_ids' => 'nullable|array',
+            'vendor_ids.*' => 'string',
             'minimum_order_quantity' => 'nullable|integer|min:0',
             'reorder_level' => 'nullable|integer|min:0',
             'reorder_quantity' => 'nullable|integer|min:0',
-            'unit_price' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|string|max:3',
             'barcode' => 'nullable|string|max:100',
             'image' => 'nullable|image|max:2048',
             'is_hazmat' => 'nullable|boolean',
@@ -125,11 +123,14 @@ class ItemController extends Controller
                 }
             }
 
-            // Validate vendor_id if provided
-            if ($request->filled('vendor_id')) {
-                $vendor = Vendor::find($request->vendor_id);
-                if (!$vendor) {
-                    $validator->errors()->add('vendor_id', 'Selected vendor is invalid');
+            // Validate vendor_ids if provided
+            if ($request->filled('vendor_ids') && is_array($request->vendor_ids)) {
+                foreach ($request->vendor_ids as $vendorId) {
+                    $vendor = Vendor::find($vendorId);
+                    if (!$vendor) {
+                        $validator->errors()->add('vendor_ids', 'One or more selected vendors are invalid');
+                        break;
+                    }
                 }
             }
 
@@ -179,13 +180,10 @@ class ItemController extends Controller
                 'volume' => $request->volume,
                 'preferred_storage_type_id' => $request->preferred_storage_type_id,
                 'preferred_bin_id' => $request->preferred_bin_id,
-                'vendor_id' => $request->vendor_id,
-                'alternate_vendors' => $request->alternate_vendors ?? [],
+                'vendor_ids' => $request->vendor_ids ?? [],
                 'minimum_order_quantity' => $request->minimum_order_quantity,
                 'reorder_level' => $request->reorder_level,
                 'reorder_quantity' => $request->reorder_quantity,
-                'unit_price' => $request->unit_price,
-                'currency' => $request->currency ?? 'USD',
                 'barcode' => $request->barcode,
                 'image_url' => $imageUrl,
                 'is_active' => true,
@@ -213,7 +211,7 @@ class ItemController extends Controller
      */
     public function show($id)
     {
-        $item = Item::with(['vendor', 'preferredStorageType', 'preferredBin', 'categoryModel'])->findOrFail($id);
+        $item = Item::with(['preferredStorageType', 'preferredBin', 'categoryModel'])->findOrFail($id);
 
         return view('tenant.items.show', compact('item'));
     }
@@ -253,13 +251,11 @@ class ItemController extends Controller
             'volume' => 'nullable|numeric|min:0',
             'preferred_storage_type_id' => 'nullable',
             'preferred_bin_id' => 'nullable',
-            'vendor_id' => 'nullable',
-            'alternate_vendors' => 'nullable|array',
+            'vendor_ids' => 'nullable|array',
+            'vendor_ids.*' => 'string',
             'minimum_order_quantity' => 'nullable|integer|min:0',
             'reorder_level' => 'nullable|integer|min:0',
             'reorder_quantity' => 'nullable|integer|min:0',
-            'unit_price' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|string|max:3',
             'barcode' => 'nullable|string|max:100',
             'image' => 'nullable|image|max:2048',
             'is_hazmat' => 'nullable|boolean',
@@ -285,11 +281,14 @@ class ItemController extends Controller
                 }
             }
 
-            // Validate vendor_id if provided
-            if ($request->filled('vendor_id')) {
-                $vendor = Vendor::find($request->vendor_id);
-                if (!$vendor) {
-                    $validator->errors()->add('vendor_id', 'Selected vendor is invalid');
+            // Validate vendor_ids if provided
+            if ($request->filled('vendor_ids') && is_array($request->vendor_ids)) {
+                foreach ($request->vendor_ids as $vendorId) {
+                    $vendor = Vendor::find($vendorId);
+                    if (!$vendor) {
+                        $validator->errors()->add('vendor_ids', 'One or more selected vendors are invalid');
+                        break;
+                    }
                 }
             }
 
@@ -332,13 +331,10 @@ class ItemController extends Controller
                 'volume' => $request->volume,
                 'preferred_storage_type_id' => $request->preferred_storage_type_id,
                 'preferred_bin_id' => $request->preferred_bin_id,
-                'vendor_id' => $request->vendor_id,
-                'alternate_vendors' => $request->alternate_vendors ?? [],
+                'vendor_ids' => $request->vendor_ids ?? [],
                 'minimum_order_quantity' => $request->minimum_order_quantity,
                 'reorder_level' => $request->reorder_level,
                 'reorder_quantity' => $request->reorder_quantity,
-                'unit_price' => $request->unit_price,
-                'currency' => $request->currency,
                 'barcode' => $request->barcode,
                 'is_hazmat' => $request->has('is_hazmat'),
                 'hazmat_class' => $request->hazmat_class,

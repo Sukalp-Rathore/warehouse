@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Client\User;
 use App\Models\Client\Role;
 use App\Models\Client\Plant;
+use App\Models\Client\Warehouse;
 use App\Models\Master\Client;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -53,28 +55,11 @@ class TenantUserController extends Controller
     {
         $roles = Role::active()->get();
         $plants = Plant::active()->get();
+        $warehouses = Warehouse::active()->get();
         
-        // Define available permissions
-        $availablePermissions = [
-            'warehouse.view' => 'View Warehouse',
-            'warehouse.create' => 'Create Warehouse',
-            'warehouse.edit' => 'Edit Warehouse',
-            'warehouse.delete' => 'Delete Warehouse',
-            'inventory.view' => 'View Inventory',
-            'inventory.create' => 'Create Inventory',
-            'inventory.edit' => 'Edit Inventory',
-            'inventory.delete' => 'Delete Inventory',
-            'reports.view' => 'View Reports',
-            'reports.export' => 'Export Reports',
-            'users.view' => 'View Users',
-            'users.create' => 'Create Users',
-            'users.edit' => 'Edit Users',
-            'users.delete' => 'Delete Users',
-            'settings.view' => 'View Settings',
-            'settings.edit' => 'Edit Settings',
-        ];
+        $availablePermissions = PermissionHelper::getAvailablePermissions();
         
-        return view('tenant.users.create', compact('roles', 'plants', 'availablePermissions'));
+        return view('tenant.users.create', compact('roles', 'plants', 'warehouses', 'availablePermissions'));
     }
 
     /**
@@ -96,15 +81,31 @@ class TenantUserController extends Controller
             'role_id' => 'required',
             'permissions' => 'nullable|array',
             'plant_access' => 'nullable|array',
+            'warehouse_access' => 'nullable|array',
             'status' => 'required|in:active,inactive'
         ]);
 
-        // Custom validation for role_id
+        // Custom validation for role_id and warehouse_access
         $validator->after(function ($validator) use ($request) {
             if ($request->role_id) {
                 $role = Role::find($request->role_id);
                 if (!$role) {
                     $validator->errors()->add('role_id', 'The selected role is invalid.');
+                }
+            }
+            
+            // Validate that warehouses belong to selected plants
+            if ($request->filled('warehouse_access') && $request->filled('plant_access')) {
+                $selectedPlantIds = $request->plant_access;
+                $selectedWarehouseIds = $request->warehouse_access;
+                
+                // Get warehouses and check if they belong to selected plants
+                $warehouses = Warehouse::whereIn('_id', $selectedWarehouseIds)->get();
+                foreach ($warehouses as $warehouse) {
+                    if (!in_array($warehouse->plant_id, $selectedPlantIds)) {
+                        $validator->errors()->add('warehouse_access', 
+                            "Warehouse {$warehouse->warehouse_name} does not belong to any selected plant.");
+                    }
                 }
             }
         });
@@ -127,6 +128,7 @@ class TenantUserController extends Controller
                 'role_id' => $request->role_id,
                 'permissions' => $request->permissions ?? [],
                 'plant_access' => $request->plant_access ?? [],
+                'warehouse_access' => $request->warehouse_access ?? [],
                 'status' => $request->status,
                 'created_by' => session('user._id')
             ]);
@@ -191,28 +193,11 @@ class TenantUserController extends Controller
         $user = User::findOrFail($id);
         $roles = Role::active()->get();
         $plants = Plant::active()->get();
+        $warehouses = Warehouse::active()->get();
         
-        // Define available permissions
-        $availablePermissions = [
-            'warehouse.view' => 'View Warehouse',
-            'warehouse.create' => 'Create Warehouse',
-            'warehouse.edit' => 'Edit Warehouse',
-            'warehouse.delete' => 'Delete Warehouse',
-            'inventory.view' => 'View Inventory',
-            'inventory.create' => 'Create Inventory',
-            'inventory.edit' => 'Edit Inventory',
-            'inventory.delete' => 'Delete Inventory',
-            'reports.view' => 'View Reports',
-            'reports.export' => 'Export Reports',
-            'users.view' => 'View Users',
-            'users.create' => 'Create Users',
-            'users.edit' => 'Edit Users',
-            'users.delete' => 'Delete Users',
-            'settings.view' => 'View Settings',
-            'settings.edit' => 'Edit Settings',
-        ];
+        $availablePermissions = PermissionHelper::getAvailablePermissions();
         
-        return view('tenant.users.edit', compact('user', 'roles', 'plants', 'availablePermissions'));
+        return view('tenant.users.edit', compact('user', 'roles', 'plants', 'warehouses', 'availablePermissions'));
     }
 
     /**
@@ -231,8 +216,27 @@ class TenantUserController extends Controller
             'role_id' => 'required|exists:roles,_id',
             'permissions' => 'nullable|array',
             'plant_access' => 'nullable|array',
+            'warehouse_access' => 'nullable|array',
             'status' => 'required|in:active,inactive'
         ]);
+        
+        // Custom validation for warehouse_access
+        $validator->after(function ($validator) use ($request) {
+            // Validate that warehouses belong to selected plants
+            if ($request->filled('warehouse_access') && $request->filled('plant_access')) {
+                $selectedPlantIds = $request->plant_access;
+                $selectedWarehouseIds = $request->warehouse_access;
+                
+                // Get warehouses and check if they belong to selected plants
+                $warehouses = Warehouse::whereIn('_id', $selectedWarehouseIds)->get();
+                foreach ($warehouses as $warehouse) {
+                    if (!in_array($warehouse->plant_id, $selectedPlantIds)) {
+                        $validator->errors()->add('warehouse_access', 
+                            "Warehouse {$warehouse->warehouse_name} does not belong to any selected plant.");
+                    }
+                }
+            }
+        });
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -248,6 +252,7 @@ class TenantUserController extends Controller
             'role_id' => $request->role_id,
             'permissions' => $request->permissions ?? [],
             'plant_access' => $request->plant_access ?? [],
+            'warehouse_access' => $request->warehouse_access ?? [],
             'status' => $request->status,
         ];
 

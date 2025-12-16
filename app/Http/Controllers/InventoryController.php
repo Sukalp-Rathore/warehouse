@@ -97,6 +97,9 @@ class InventoryController extends Controller
     {
         $query = Inventory::with(['item', 'warehouse', 'bin', 'batch', 'storageType', 'section']);
 
+        // Apply warehouse filter from session
+        $query = \App\Services\DataFilteringService::filterByWarehouse($query);
+
         // Filters
         if ($request->filled('warehouse_id')) {
             $query->where('warehouse_id', $request->warehouse_id);
@@ -128,7 +131,16 @@ class InventoryController extends Controller
         }
 
         $inventory = $query->paginate(20);
-        $warehouses = Warehouse::active()->with('plant')->get();
+        
+        // Filter warehouses by user's warehouse access
+        $user = session('user');
+        $userWarehouseAccess = $user['warehouse_access'] ?? [];
+        $warehousesQuery = Warehouse::active()->with('plant');
+        if (!empty($userWarehouseAccess)) {
+            $warehousesQuery->whereIn('_id', $userWarehouseAccess);
+        }
+        $warehouses = $warehousesQuery->get();
+        
         $items = Item::active()->get();
 
         return view('tenant.inventory.index', compact('inventory', 'warehouses', 'items'));
@@ -140,8 +152,20 @@ class InventoryController extends Controller
     public function create()
     {
         $items = Item::active()->get();
-        $warehouses = Warehouse::active()->with('plant')->get();
-        $bins = Bin::available()->get();
+        
+        // Filter warehouses by user's warehouse access and selected warehouse
+        $user = session('user');
+        $userWarehouseAccess = $user['warehouse_access'] ?? [];
+        $warehousesQuery = Warehouse::active()->with('plant');
+        if (!empty($userWarehouseAccess)) {
+            $warehousesQuery->whereIn('_id', $userWarehouseAccess);
+        }
+        $warehouses = $warehousesQuery->get();
+        
+        // Filter bins by selected warehouse
+        $binsQuery = Bin::available();
+        $binsQuery = \App\Services\DataFilteringService::filterByWarehouse($binsQuery);
+        $bins = $binsQuery->get();
 
         return view('tenant.inventory.create', compact('items', 'warehouses', 'bins'));
     }
@@ -230,13 +254,27 @@ class InventoryController extends Controller
                 $batchId = (string) $batch->_id;
             }
 
-            // Generate barcode/QR/RFID codes
+            // Generate barcode/QR/RFID codes with warehouse and bin IDs for uniqueness
             $item = Item::find($request->item_id);
             $codes = $this->barcodeService->generateAllCodes(
                 $item->item_code,
-                null,
-                null
+                $request->warehouse_id,
+                $request->bin_id
             );
+            
+            // Additional validation: Ensure codes are unique
+            $barcodeExists = \App\Models\Client\Inventory::where('barcode', $codes['barcode'])->exists();
+            $qrCodeExists = \App\Models\Client\Inventory::where('qr_code', $codes['qr_code'])->exists();
+            $rfidTagExists = \App\Models\Client\Inventory::where('rfid_tag', $codes['rfid_tag'])->exists();
+            
+            if ($barcodeExists || $qrCodeExists || $rfidTagExists) {
+                // Regenerate codes if duplicates found (shouldn't happen with new logic, but safety check)
+                $codes = $this->barcodeService->generateAllCodes(
+                    $item->item_code,
+                    $request->warehouse_id,
+                    $request->bin_id
+                );
+            }
 
             // Execute putaway
             $result = $this->movementService->putaway(
@@ -303,12 +341,95 @@ class InventoryController extends Controller
     public function transferForm($id)
     {
         $inventory = Inventory::with(['item', 'bin', 'warehouse'])->findOrFail($id);
-        $bins = Bin::available()
-            ->where('warehouse_id', $inventory->warehouse_id)
-            ->where('_id', '!=', $inventory->bin_id)
-            ->get();
+        // Don't pre-load bins - they will be loaded dynamically based on quantity
+        $bins = collect(); // Empty collection, will be populated via AJAX
 
         return view('tenant.inventory.transfer', compact('inventory', 'bins'));
+    }
+
+    /**
+     * Get destination bins with sufficient capacity for inventory transfer (AJAX endpoint)
+     */
+    public function getDestinationBinsForTransfer(Request $request)
+    {
+        $inventoryId = $request->input('inventory_id');
+        $quantity = $request->input('quantity', 0);
+        
+        if (!$inventoryId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Inventory ID is required'
+            ], 400);
+        }
+
+        if ($quantity <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quantity is required'
+            ], 400);
+        }
+
+        $inventory = Inventory::with(['item', 'bin'])->find($inventoryId);
+        if (!$inventory) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Inventory record not found'
+            ], 404);
+        }
+
+        $item = $inventory->item;
+        if (!$item) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found'
+            ], 404);
+        }
+
+        // Calculate required volume and weight
+        $volumePerUnit = $item->volume_per_unit ?? $item->volume ?? 0.01;
+        $weightPerUnit = $item->weight_per_unit ?? $item->weight ?? 0.01;
+        
+        $requiredVolume = $quantity * $volumePerUnit;
+        $requiredWeight = $quantity * $weightPerUnit;
+
+        // Get all available bins in the same warehouse (excluding source bin)
+        $query = Bin::where('warehouse_id', $inventory->warehouse_id)
+            ->where('status', 'available')
+            ->where('is_active', true)
+            ->where('_id', '!=', $inventory->bin_id)
+            ->with(['warehouse', 'storageType', 'section']);
+
+        // Apply warehouse filter from session
+        $query = \App\Services\DataFilteringService::filterByWarehouse($query);
+
+        $bins = $query->get()
+            ->filter(function($bin) use ($requiredVolume, $requiredWeight) {
+                $availableVolume = ($bin->max_volume ?? 0) - ($bin->current_volume ?? 0);
+                $availableWeight = ($bin->max_weight ?? 0) - ($bin->current_weight ?? 0);
+                return $availableVolume >= $requiredVolume && $availableWeight >= $requiredWeight;
+            })
+            ->map(function($bin) use ($requiredVolume, $requiredWeight) {
+                $availableVolume = ($bin->max_volume ?? 0) - ($bin->current_volume ?? 0);
+                $availableWeight = ($bin->max_weight ?? 0) - ($bin->current_weight ?? 0);
+                
+                return [
+                    '_id' => (string) $bin->_id,
+                    'bin_code' => $bin->bin_code,
+                    'bin_name' => $bin->bin_name ?? $bin->bin_code,
+                    'storage_type' => $bin->storageType->name ?? 'N/A',
+                    'section' => $bin->section->section_name ?? 'N/A',
+                    'available_volume' => round($availableVolume, 2),
+                    'available_weight' => round($availableWeight, 2),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'bins' => $bins,
+            'required_volume' => round($requiredVolume, 2),
+            'required_weight' => round($requiredWeight, 2),
+        ]);
     }
 
     /**
@@ -323,7 +444,7 @@ class InventoryController extends Controller
         ]);
 
         $validator->after(function ($validator) use ($request, $id) {
-            $inventory = Inventory::find($id);
+            $inventory = Inventory::with('item')->find($id);
             if (!$inventory) {
                 $validator->errors()->add('inventory', 'Inventory record not found');
                 return;
@@ -338,6 +459,29 @@ class InventoryController extends Controller
             if (!$bin || (string) $bin->warehouse_id !== (string) $inventory->warehouse_id) {
                 $validator->errors()->add('to_bin_id', 'Invalid destination bin');
                 return;
+            }
+
+            // Check bin capacity
+            if ($inventory->item) {
+                $item = $inventory->item;
+                $volumePerUnit = $item->volume_per_unit ?? $item->volume ?? 0.01;
+                $weightPerUnit = $item->weight_per_unit ?? $item->weight ?? 0.01;
+                
+                $requiredVolume = $request->quantity * $volumePerUnit;
+                $requiredWeight = $request->quantity * $weightPerUnit;
+                
+                $availableVolume = ($bin->max_volume ?? 0) - ($bin->current_volume ?? 0);
+                $availableWeight = ($bin->max_weight ?? 0) - ($bin->current_weight ?? 0);
+                
+                if ($availableVolume < $requiredVolume) {
+                    $validator->errors()->add('to_bin_id', 'Destination bin does not have sufficient volume capacity. Required: ' . round($requiredVolume, 2) . ', Available: ' . round($availableVolume, 2));
+                    return;
+                }
+                
+                if ($availableWeight < $requiredWeight) {
+                    $validator->errors()->add('to_bin_id', 'Destination bin does not have sufficient weight capacity. Required: ' . round($requiredWeight, 2) . ', Available: ' . round($availableWeight, 2));
+                    return;
+                }
             }
         });
 
@@ -356,7 +500,8 @@ class InventoryController extends Controller
                 $request->quantity,
                 $inventory->batch_id,
                 null,
-                $request->notes
+                $request->notes,
+                $inventory->_id // Pass the specific inventory record ID
             );
 
             if (!$result['success']) {

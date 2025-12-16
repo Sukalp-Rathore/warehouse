@@ -117,13 +117,14 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Plant Access</label>
-                                    <div class="row">
+                                    <div class="row" id="plant-access-container">
                                         @foreach($plants as $plant)
                                             <div class="col-md-6 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" 
+                                                    <input class="form-check-input plant-checkbox" type="checkbox" 
                                                            name="plant_access[]" value="{{ $plant->_id }}" 
                                                            id="plant_{{ $plant->_id }}"
+                                                           data-plant-id="{{ $plant->_id }}"
                                                            {{ in_array($plant->_id, old('plant_access', [])) ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="plant_{{ $plant->_id }}">
                                                         {{ $plant->plant_name }} ({{ $plant->plant_code }})
@@ -132,6 +133,33 @@
                                             </div>
                                         @endforeach
                                     </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Warehouse Access</label>
+                                    <div class="alert alert-info mb-2" id="warehouse-info" style="display: none;">
+                                        <small>Please select at least one plant to see available warehouses.</small>
+                                    </div>
+                                    <div class="row" id="warehouse-access-container">
+                                        @foreach($warehouses as $warehouse)
+                                            <div class="col-md-6 mb-2 warehouse-option" 
+                                                 data-plant-id="{{ $warehouse->plant_id }}" 
+                                                 style="display: none;">
+                                                <div class="form-check">
+                                                    <input class="form-check-input warehouse-checkbox" type="checkbox" 
+                                                           name="warehouse_access[]" value="{{ $warehouse->_id }}" 
+                                                           id="warehouse_{{ $warehouse->_id }}"
+                                                           {{ in_array($warehouse->_id, old('warehouse_access', [])) ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="warehouse_{{ $warehouse->_id }}">
+                                                        {{ $warehouse->warehouse_name }} ({{ $warehouse->warehouse_code }})
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    @if(count($warehouses) === 0)
+                                        <p class="text-muted small">No warehouses available. Please create warehouses first.</p>
+                                    @endif
                                 </div>
 
                                 <div class="mb-3">
@@ -167,6 +195,54 @@
 document.addEventListener('DOMContentLoaded', function() {
     const roleSelect = document.getElementById('role_id');
     const permissionCheckboxes = document.querySelectorAll('input[name="permissions[]"]');
+    const plantCheckboxes = document.querySelectorAll('.plant-checkbox');
+    const warehouseOptions = document.querySelectorAll('.warehouse-option');
+    const warehouseInfo = document.getElementById('warehouse-info');
+    
+    // Function to update warehouse visibility based on selected plants
+    function updateWarehouseVisibility() {
+        const selectedPlantIds = Array.from(plantCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.getAttribute('data-plant-id'));
+        
+        if (selectedPlantIds.length === 0) {
+            // No plants selected, hide all warehouses
+            warehouseOptions.forEach(option => {
+                option.style.display = 'none';
+                const checkbox = option.querySelector('.warehouse-checkbox');
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+            });
+            warehouseInfo.style.display = 'block';
+            return;
+        }
+        
+        warehouseInfo.style.display = 'none';
+        
+        // Show warehouses that belong to selected plants
+        warehouseOptions.forEach(option => {
+            const plantId = option.getAttribute('data-plant-id');
+            if (selectedPlantIds.includes(plantId)) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+                // Uncheck warehouses that don't belong to selected plants
+                const checkbox = option.querySelector('.warehouse-checkbox');
+                if (checkbox && checkbox.checked) {
+                    checkbox.checked = false;
+                }
+            }
+        });
+    }
+    
+    // Listen for plant checkbox changes
+    plantCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateWarehouseVisibility);
+    });
+    
+    // Initialize warehouse visibility on page load
+    updateWarehouseVisibility();
     
     // Function to update permissions based on selected role
     function updatePermissionsForRole(roleId) {

@@ -217,49 +217,23 @@
                         <hr>
 
                         <div class="row">
-                            <!-- Vendor & Pricing -->
+                            <!-- Vendors -->
                             <div class="col-md-6">
-                                <h5 class="mb-3">Vendor & Pricing</h5>
+                                <h5 class="mb-3">Vendors</h5>
                                 
                                 <div class="mb-3">
-                                    <label for="vendor_id" class="form-label">Primary Vendor</label>
-                                    <select class="form-select @error('vendor_id') is-invalid @enderror" id="vendor_id" name="vendor_id">
-                                        <option value="">Select Vendor</option>
+                                    <label for="vendor_ids" class="form-label">Select Vendors</label>
+                                    <select class="form-select @error('vendor_ids') is-invalid @enderror" id="vendor_ids" name="vendor_ids[]" multiple size="5">
                                         @foreach($vendors as $vendor)
-                                            <option value="{{ $vendor->_id }}" {{ old('vendor_id') == $vendor->_id ? 'selected' : '' }}>
-                                                {{ $vendor->vendor_name }}
+                                            <option value="{{ $vendor->_id }}" {{ in_array($vendor->_id, old('vendor_ids', [])) ? 'selected' : '' }}>
+                                                {{ $vendor->vendor_name }} ({{ $vendor->vendor_code }})
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('vendor_id')
+                                    <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple vendors</small>
+                                    @error('vendor_ids')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="unit_price" class="form-label">Unit Price</label>
-                                            <input type="number" step="0.01" class="form-control @error('unit_price') is-invalid @enderror" 
-                                                   id="unit_price" name="unit_price" value="{{ old('unit_price') }}">
-                                            @error('unit_price')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="currency" class="form-label">Currency</label>
-                                            <select class="form-select @error('currency') is-invalid @enderror" id="currency" name="currency">
-                                                <option value="USD" {{ old('currency') == 'USD' ? 'selected' : '' }}>USD</option>
-                                                <option value="INR" {{ old('currency') == 'INR' ? 'selected' : '' }}>INR</option>
-                                                <option value="EUR" {{ old('currency') == 'EUR' ? 'selected' : '' }}>EUR</option>
-                                            </select>
-                                            @error('currency')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 

@@ -33,6 +33,9 @@ class TransferOrderController extends Controller
     {
         $query = TransferOrder::with(['fromBin', 'toBin', 'item', 'batch', 'assignedTo', 'approvedBy']);
 
+        // Apply warehouse filter from session - filter by source warehouse
+        $query = \App\Services\DataFilteringService::filterByWarehouse($query, 'source_warehouse_id');
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -58,7 +61,15 @@ class TransferOrderController extends Controller
 
         $transferOrders = $query->orderBy('created_at', 'desc')->paginate(20);
         $operators = User::where('status', 'active')->get();
-        $warehouses = Warehouse::active()->get();
+        
+        // Filter warehouses by user's warehouse access
+        $user = session('user');
+        $userWarehouseAccess = $user['warehouse_access'] ?? [];
+        $warehousesQuery = Warehouse::active()->with('plant');
+        if (!empty($userWarehouseAccess)) {
+            $warehousesQuery->whereIn('_id', $userWarehouseAccess);
+        }
+        $warehouses = $warehousesQuery->get();
 
         return view('tenant.transfer-orders.index', compact('transferOrders', 'operators', 'warehouses'));
     }
@@ -78,11 +89,12 @@ class TransferOrderController extends Controller
 
     /**
      * Get bins for selected item (AJAX endpoint)
-     * Returns only bins that currently contain the selected item
+     * Returns only bins that currently contain the selected item with sufficient available quantity
      */
     public function getBinsForItem(Request $request)
     {
         $itemId = $request->input('item_id');
+        $quantity = $request->input('quantity', 0); // Optional quantity filter
         
         if (!$itemId) {
             return response()->json([
@@ -121,8 +133,23 @@ class TransferOrderController extends Controller
                 return $records->sum('available_qty');
             });
 
+        // Filter bins by quantity if provided
+        if ($quantity > 0) {
+            $binQuantities = $binQuantities->filter(function ($availableQty) use ($quantity) {
+                return $availableQty >= $quantity;
+            });
+        }
+
+        if ($binQuantities->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'bins' => [],
+                'message' => $quantity > 0 ? 'No bins have sufficient available quantity' : 'No bins contain this item'
+            ]);
+        }
+
         // Keep original ObjectId values for querying bins
-        $binIds = $inventoryRecords->pluck('bin_id')->unique();
+        $binIds = $binQuantities->keys();
 
         // Get full bin details
         $bins = Bin::whereIn('_id', $binIds)
@@ -143,6 +170,86 @@ class TransferOrderController extends Controller
         return response()->json([
             'success' => true,
             'bins' => $bins
+        ]);
+    }
+
+    /**
+     * Get destination bins with sufficient capacity (AJAX endpoint)
+     * Returns bins that can accommodate the transfer quantity
+     */
+    public function getDestinationBins(Request $request)
+    {
+        $itemId = $request->input('item_id');
+        $quantity = $request->input('quantity', 0);
+        $fromBinId = $request->input('from_bin_id'); // Exclude source bin
+        
+        if (!$itemId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item ID is required'
+            ], 400);
+        }
+
+        if ($quantity <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quantity is required'
+            ], 400);
+        }
+
+        $item = Item::find($itemId);
+        if (!$item) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found'
+            ], 404);
+        }
+
+        // Calculate required volume and weight
+        $volumePerUnit = $item->volume_per_unit ?? $item->volume ?? 0.01;
+        $weightPerUnit = $item->weight_per_unit ?? $item->weight ?? 0.01;
+        
+        $requiredVolume = $quantity * $volumePerUnit;
+        $requiredWeight = $quantity * $weightPerUnit;
+
+        // Get all available bins (excluding source bin if provided)
+        $query = Bin::where('status', 'available')
+            ->where('is_active', true)
+            ->with(['warehouse', 'storageType']);
+        
+        if ($fromBinId) {
+            $query->where('_id', '!=', $fromBinId);
+        }
+
+        // Apply warehouse filter from session
+        $query = \App\Services\DataFilteringService::filterByWarehouse($query);
+
+        $bins = $query->get()
+            ->filter(function($bin) use ($requiredVolume, $requiredWeight) {
+                $availableVolume = ($bin->max_volume ?? 0) - ($bin->current_volume ?? 0);
+                $availableWeight = ($bin->max_weight ?? 0) - ($bin->current_weight ?? 0);
+                return $availableVolume >= $requiredVolume && $availableWeight >= $requiredWeight;
+            })
+            ->map(function($bin) use ($requiredVolume, $requiredWeight) {
+                $availableVolume = ($bin->max_volume ?? 0) - ($bin->current_volume ?? 0);
+                $availableWeight = ($bin->max_weight ?? 0) - ($bin->current_weight ?? 0);
+                
+                return [
+                    '_id' => (string) $bin->_id,
+                    'bin_code' => $bin->bin_code,
+                    'warehouse_name' => $bin->warehouse->warehouse_name ?? 'N/A',
+                    'available_volume' => round($availableVolume, 2),
+                    'available_weight' => round($availableWeight, 2),
+                    'storage_type' => $bin->storageType->name ?? 'N/A',
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'bins' => $bins,
+            'required_volume' => round($requiredVolume, 2),
+            'required_weight' => round($requiredWeight, 2),
         ]);
     }
 
@@ -184,7 +291,7 @@ class TransferOrderController extends Controller
                 // Allow cross-warehouse transfers but warn
             }
 
-            // Check source inventory
+            // Check source inventory - ensure sufficient quantity is available
             if ($fromBin && $item) {
                 // Use the actual bin and item objects' IDs to ensure correct ObjectId matching
                 $fromBinId = $fromBin->_id;

@@ -20,6 +20,8 @@ class Bin extends Model
         'section_id',
         'zone_code',
         'coordinates',
+        'row_number',
+        'column_number',
         'max_volume',
         'max_weight',
         'current_volume',
@@ -33,6 +35,8 @@ class Bin extends Model
 
     protected $casts = [
         'coordinates' => 'array',
+        'row_number' => 'integer',
+        'column_number' => 'integer',
         'max_volume' => 'decimal:2',
         'max_weight' => 'decimal:2',
         'current_volume' => 'decimal:2',
@@ -144,6 +148,17 @@ class Bin extends Model
     public function scopeByStatus($query, $status)
     {
         return $query->where('status', $status);
+    }
+
+    /**
+     * Get grid position in format "r{row}c{column}"
+     */
+    public function getGridPositionAttribute()
+    {
+        if ($this->row_number && $this->column_number) {
+            return "r{$this->row_number}c{$this->column_number}";
+        }
+        return null;
     }
 }
 

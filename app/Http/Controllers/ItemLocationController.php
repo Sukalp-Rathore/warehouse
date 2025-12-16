@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\ItemLocationService;
+use App\Models\Client\Item;
 
 class ItemLocationController extends Controller
 {
@@ -82,6 +83,47 @@ class ItemLocationController extends Controller
         return response()->json([
             'success' => true,
             'results' => $formattedResults,
+        ]);
+    }
+
+    /**
+     * AJAX endpoint: Live search for items (returns up to 10 suggestions)
+     */
+    public function liveSearch(Request $request)
+    {
+        $request->validate([
+            'query' => 'required|string|min:1|max:255',
+        ]);
+
+        $query = trim($request->input('query'));
+
+        // Search items by code, SKU, description, or barcode
+        $items = Item::where(function($q) use ($query) {
+                $q->where('item_code', 'like', "%{$query}%")
+                  ->orWhere('sku', 'like', "%{$query}%")
+                  ->orWhere('description', 'like', "%{$query}%")
+                  ->orWhere('short_description', 'like', "%{$query}%")
+                  ->orWhere('barcode', 'like', "%{$query}%");
+            })
+            ->where('is_active', true)
+            ->limit(10)
+            ->get(['_id', 'item_code', 'sku', 'description', 'short_description', 'barcode']);
+
+        $suggestions = $items->map(function($item) {
+            return [
+                'id' => (string) $item->_id,
+                'item_code' => $item->item_code,
+                'sku' => $item->sku,
+                'description' => $item->description,
+                'short_description' => $item->short_description,
+                'barcode' => $item->barcode,
+                'display_text' => $item->item_code . ' - ' . ($item->description ?: $item->short_description ?: 'N/A'),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'suggestions' => $suggestions,
         ]);
     }
 }

@@ -26,6 +26,10 @@ class DashboardController extends Controller
             'session_data' => session()->all()
         ];
 
+        // Add plant/warehouse selection context
+        $filterContext = \App\Services\DataFilteringService::getFilterContext();
+        $tenantInfo['filter_context'] = $filterContext;
+
         \Log::info('Dashboard data being passed to view', [
             'tenant_info' => $tenantInfo,
             'user_data' => $user

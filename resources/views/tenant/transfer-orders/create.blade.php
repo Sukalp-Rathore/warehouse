@@ -64,10 +64,10 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="from_bin_id" class="form-label">From Bin *</label>
-                                    <select name="from_bin_id" id="from_bin_id" class="form-select @error('from_bin_id') is-invalid @enderror" required>
-                                        <option value="">Select Item First</option>
+                                    <select name="from_bin_id" id="from_bin_id" class="form-select @error('from_bin_id') is-invalid @enderror" required disabled>
+                                        <option value="">Select Item and Enter Quantity First</option>
                                     </select>
-                                    <small class="form-text text-muted">Only bins containing the selected item are listed</small>
+                                    <small class="form-text text-muted">Select item and enter quantity to see available bins with sufficient stock</small>
                                     @error('from_bin_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -76,14 +76,10 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="to_bin_id" class="form-label">To Bin *</label>
-                                    <select name="to_bin_id" id="to_bin_id" class="form-select @error('to_bin_id') is-invalid @enderror" required>
-                                        <option value="">Select Destination Bin</option>
-                                        @foreach($bins as $bin)
-                                            <option value="{{ $bin->_id }}" {{ old('to_bin_id') == $bin->_id ? 'selected' : '' }}>
-                                                {{ $bin->bin_code }} - {{ $bin->warehouse->warehouse_name ?? 'N/A' }}
-                                            </option>
-                                        @endforeach
+                                    <select name="to_bin_id" id="to_bin_id" class="form-select @error('to_bin_id') is-invalid @enderror" required disabled>
+                                        <option value="">Select Item and Enter Quantity First</option>
                                     </select>
+                                    <small class="form-text text-muted">Select item and enter quantity to see available destination bins with sufficient capacity</small>
                                     @error('to_bin_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -145,23 +141,32 @@
 </div>
 
 <script>
-// Filter from_bin dropdown based on selected item
-document.getElementById('item_id').addEventListener('change', function() {
-    const itemId = this.value;
+// Function to fetch bins for item with quantity filter
+function fetchBinsForItem() {
+    const itemId = document.getElementById('item_id').value;
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
     const fromBinSelect = document.getElementById('from_bin_id');
-    const toBinSelect = document.getElementById('to_bin_id');
     
     // Clear and disable from_bin dropdown
     fromBinSelect.innerHTML = '<option value="">Loading bins...</option>';
     fromBinSelect.disabled = true;
     
+    // Require both item and quantity to be provided
     if (!itemId) {
         fromBinSelect.innerHTML = '<option value="">Select Item First</option>';
         return;
     }
     
-    // Fetch bins for this item
-    fetch(`{{ route('tenant.transfer-orders.get-bins-for-item') }}?item_id=${itemId}`, {
+    if (quantity <= 0) {
+        fromBinSelect.innerHTML = '<option value="">Enter Quantity First</option>';
+        return;
+    }
+    
+    // Build query string with quantity (required)
+    let queryString = `item_id=${encodeURIComponent(itemId)}&quantity=${encodeURIComponent(quantity)}`;
+    
+    // Fetch bins for this item with quantity filter
+    fetch(`{{ route('tenant.transfer-orders.get-bins-for-item') }}?${queryString}`, {
         method: 'GET',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
@@ -192,30 +197,163 @@ document.getElementById('item_id').addEventListener('change', function() {
                 fromBinSelect.value = oldValue;
             }
         } else {
-            fromBinSelect.innerHTML = '<option value="">No bins contain this item</option>';
+            const message = `No bins have sufficient available quantity (${quantity} required)`;
+            fromBinSelect.innerHTML = `<option value="">${message}</option>`;
         }
     })
     .catch(error => {
         console.error('Error fetching bins:', error);
         fromBinSelect.innerHTML = '<option value="">Error loading bins</option>';
     });
-});
+}
 
-// Disable selected bins in opposite dropdowns
-document.getElementById('from_bin_id').addEventListener('change', function() {
-    const fromBinId = this.value;
+// When item changes, check if we should fetch bins
+document.getElementById('item_id').addEventListener('change', function() {
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+    const fromBinSelect = document.getElementById('from_bin_id');
     const toBinSelect = document.getElementById('to_bin_id');
     
-    // Disable the selected from bin in the to bin dropdown
-    Array.from(toBinSelect.options).forEach(option => {
-        if (option.value === fromBinId) {
-            option.disabled = true;
-        } else {
-            option.disabled = false;
-        }
-    });
+    if (!this.value) {
+        fromBinSelect.innerHTML = '<option value="">Select Item and Enter Quantity First</option>';
+        fromBinSelect.disabled = true;
+        toBinSelect.innerHTML = '<option value="">Select Item and Enter Quantity First</option>';
+        toBinSelect.disabled = true;
+        return;
+    }
+    
+    // Only fetch if quantity is also provided
+    if (quantity > 0) {
+        fetchBinsForItem();
+        fetchDestinationBins();
+    } else {
+        fromBinSelect.innerHTML = '<option value="">Enter Quantity to See Available Bins</option>';
+        fromBinSelect.disabled = true;
+        toBinSelect.innerHTML = '<option value="">Enter Quantity to See Available Bins</option>';
+        toBinSelect.disabled = true;
+    }
 });
 
+// Function to fetch destination bins with capacity filter
+function fetchDestinationBins() {
+    const itemId = document.getElementById('item_id').value;
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+    const fromBinId = document.getElementById('from_bin_id').value;
+    const toBinSelect = document.getElementById('to_bin_id');
+    
+    // Clear and disable to_bin dropdown
+    toBinSelect.innerHTML = '<option value="">Loading bins...</option>';
+    toBinSelect.disabled = true;
+    
+    // Require both item and quantity to be provided
+    if (!itemId) {
+        toBinSelect.innerHTML = '<option value="">Select Item First</option>';
+        return;
+    }
+    
+    if (quantity <= 0) {
+        toBinSelect.innerHTML = '<option value="">Enter Quantity First</option>';
+        return;
+    }
+    
+    // Build query string
+    let queryString = `item_id=${encodeURIComponent(itemId)}&quantity=${encodeURIComponent(quantity)}`;
+    if (fromBinId) {
+        queryString += `&from_bin_id=${encodeURIComponent(fromBinId)}`;
+    }
+    
+    // Fetch destination bins with capacity filter
+    fetch(`{{ route('tenant.transfer-orders.get-destination-bins') }}?${queryString}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.bins.length > 0) {
+            toBinSelect.innerHTML = '<option value="">Select Destination Bin</option>';
+            
+            data.bins.forEach(bin => {
+                const option = document.createElement('option');
+                option.value = bin._id;
+                
+                let label = `${bin.bin_code} - ${bin.warehouse_name}`;
+                label += ` (Avail Vol: ${bin.available_volume}, Avail Wt: ${bin.available_weight})`;
+                
+                option.textContent = label;
+                toBinSelect.appendChild(option);
+            });
+            
+            toBinSelect.disabled = false;
+            
+            // Restore old value if exists
+            const oldValue = '{{ old("to_bin_id") }}';
+            if (oldValue) {
+                toBinSelect.value = oldValue;
+            }
+        } else {
+            const message = `No bins have sufficient capacity (Vol: ${data.required_volume || 0}, Wt: ${data.required_weight || 0} required)`;
+            toBinSelect.innerHTML = `<option value="">${message}</option>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching destination bins:', error);
+        toBinSelect.innerHTML = '<option value="">Error loading bins</option>';
+    });
+}
+
+// Refetch bins when quantity changes (with debouncing)
+let quantityTimeout;
+let destinationBinTimeout;
+document.getElementById('quantity').addEventListener('input', function() {
+    const itemId = document.getElementById('item_id').value;
+    const quantity = parseFloat(this.value) || 0;
+    const fromBinSelect = document.getElementById('from_bin_id');
+    const toBinSelect = document.getElementById('to_bin_id');
+    
+    if (!itemId) {
+        fromBinSelect.innerHTML = '<option value="">Select Item First</option>';
+        fromBinSelect.disabled = true;
+        toBinSelect.innerHTML = '<option value="">Select Item First</option>';
+        toBinSelect.disabled = true;
+        return;
+    }
+    
+    if (quantity <= 0) {
+        fromBinSelect.innerHTML = '<option value="">Enter Quantity to See Available Bins</option>';
+        fromBinSelect.disabled = true;
+        toBinSelect.innerHTML = '<option value="">Enter Quantity to See Available Bins</option>';
+        toBinSelect.disabled = true;
+        return;
+    }
+    
+    // Clear previous timeouts
+    clearTimeout(quantityTimeout);
+    clearTimeout(destinationBinTimeout);
+    
+    // Debounce: wait 500ms after user stops typing
+    quantityTimeout = setTimeout(function() {
+        fetchBinsForItem();
+    }, 500);
+    
+    destinationBinTimeout = setTimeout(function() {
+        fetchDestinationBins();
+    }, 500);
+});
+
+// When from_bin changes, refetch destination bins (to exclude source bin)
+document.getElementById('from_bin_id').addEventListener('change', function() {
+    const itemId = document.getElementById('item_id').value;
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+    
+    // Refetch destination bins to exclude the selected source bin
+    if (itemId && quantity > 0) {
+        fetchDestinationBins();
+    }
+});
+
+// When to_bin changes, disable it in from_bin dropdown (if static list exists)
 document.getElementById('to_bin_id').addEventListener('change', function() {
     const toBinId = this.value;
     const fromBinSelect = document.getElementById('from_bin_id');

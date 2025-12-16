@@ -29,14 +29,11 @@ class Item extends Model
         'volume_per_unit',
         'preferred_storage_type_id',
         'preferred_bin_id',
-        'vendor_id',
-        'alternate_vendors',
+        'vendor_ids',
         'minimum_order_quantity',
         'reorder_level',
         'reorder_quantity',
         'reorder_settings',
-        'unit_price',
-        'currency',
         'barcode',
         'barcode_format', // AUTO|VENDOR
         'image_url',
@@ -53,7 +50,7 @@ class Item extends Model
 
     protected $casts = [
         'dimensions' => 'array',
-        'alternate_vendors' => 'array',
+        'vendor_ids' => 'array',
         'specifications' => 'array',
         'reorder_settings' => 'array',
         'storage_strategy' => 'array',
@@ -62,7 +59,6 @@ class Item extends Model
         'weight_per_unit' => 'decimal:3',
         'volume' => 'decimal:3',
         'volume_per_unit' => 'decimal:4',
-        'unit_price' => 'decimal:2',
         'minimum_order_quantity' => 'integer',
         'reorder_level' => 'integer',
         'reorder_quantity' => 'integer',
@@ -78,22 +74,25 @@ class Item extends Model
     ];
 
     /**
-     * Get the primary vendor for this item
+     * Get all vendors for this item
      */
-    public function vendor()
+    public function vendors()
     {
-        return $this->belongsTo(Vendor::class, 'vendor_id');
+        if (!$this->vendor_ids || empty($this->vendor_ids)) {
+            return collect();
+        }
+        return Vendor::whereIn('_id', $this->vendor_ids)->get();
     }
 
     /**
-     * Get alternate vendors
+     * Get primary vendor (first vendor in the list)
      */
-    public function alternateVendors()
+    public function vendor()
     {
-        if (!$this->alternate_vendors) {
-            return collect();
+        if (!$this->vendor_ids || empty($this->vendor_ids)) {
+            return null;
         }
-        return Vendor::whereIn('_id', $this->alternate_vendors)->get();
+        return Vendor::find($this->vendor_ids[0]);
     }
 
     /**
@@ -150,11 +149,11 @@ class Item extends Model
     }
 
     /**
-     * Scope by vendor
+     * Scope by vendor (searches in vendor_ids array)
      */
     public function scopeByVendor($query, $vendorId)
     {
-        return $query->where('vendor_id', $vendorId);
+        return $query->where('vendor_ids', $vendorId);
     }
 
     /**

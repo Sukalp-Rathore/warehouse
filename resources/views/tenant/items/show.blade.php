@@ -121,14 +121,10 @@
                                 @endif
                             </table>
 
-                            <h5 class="mb-3 mt-4">Pricing & Inventory</h5>
+                            <h5 class="mb-3 mt-4">Inventory</h5>
                             <table class="table table-bordered">
                                 <tr>
-                                    <th width="200">Unit Price</th>
-                                    <td>{{ $item->currency ?? 'USD' }} {{ number_format($item->unit_price ?? 0, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Total Available Quantity</th>
+                                    <th width="200">Total Available Quantity</th>
                                     <td><strong>{{ number_format($item->getTotalAvailableQuantity(), 2) }} {{ $item->uom }}</strong></td>
                                 </tr>
                                 @if($item->reorder_level)
@@ -145,11 +141,22 @@
                                 @endif
                             </table>
 
-                            <h5 class="mb-3 mt-4">Vendor Information</h5>
+                            <h5 class="mb-3 mt-4">Vendors</h5>
                             <table class="table table-bordered">
                                 <tr>
-                                    <th width="200">Primary Vendor</th>
-                                    <td>{{ $item->vendor->vendor_name ?? 'N/A' }}</td>
+                                    <th width="200">Vendors</th>
+                                    <td>
+                                        @if($item->vendor_ids && count($item->vendor_ids) > 0)
+                                            @php
+                                                $vendors = \App\Models\Client\Vendor::whereIn('_id', $item->vendor_ids)->get();
+                                            @endphp
+                                            @foreach($vendors as $vendor)
+                                                <span class="badge bg-primary me-1 mb-1">{{ $vendor->vendor_name }} ({{ $vendor->vendor_code }})</span>
+                                            @endforeach
+                                        @else
+                                            <span class="text-muted">No vendors assigned</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             </table>
                         </div>

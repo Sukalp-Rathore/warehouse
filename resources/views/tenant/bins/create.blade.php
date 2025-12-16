@@ -45,8 +45,8 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                     <div id="no-storage-types-hint" class="form-text" style="display:none;">
-                                        No storage types found for this warehouse. 
-                                        <a href="{{ route('tenant.storage-types.index', ['warehouse_id' => $warehouse?->_id]) }}">Create one now</a>.
+                                        No storage types found. 
+                                        <a href="{{ route('tenant.storage-types.index') }}">Create one now</a>.
                                     </div>
                                 </div>
 

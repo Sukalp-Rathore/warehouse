@@ -26,10 +26,7 @@ class BinGenerationService
             $warehouse = Warehouse::findOrFail($warehouseId);
             $storageType = StorageType::findOrFail($storageTypeId);
 
-            // Validate storage type belongs to warehouse
-            if ($storageType->warehouse_id && $storageType->warehouse_id !== $warehouseId) {
-                throw new \Exception('Storage type does not belong to this warehouse');
-            }
+            // Storage types are master data and can be used by any warehouse
 
             $binVolume = $options['bin_volume'] ?? 1.0;
             $binWeight = $options['bin_weight'] ?? 100.0;

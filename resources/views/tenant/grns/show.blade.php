@@ -19,9 +19,14 @@
                                     </button>
                                 </form>
                             @endif
+                            @if($grn->status == 'approved' && ($grn->putaway_status == 'pending' || $grn->putaway_status == 'in_progress'))
+                                <a href="{{ route('tenant.grns.putaway', $grn->_id) }}" class="btn btn-primary">
+                                    <i class="ri-inbox-line me-1"></i> Putaway
+                                </a>
+                            @endif
                             @if($grn->status == 'in_progress')
                                 <a href="{{ route('tenant.grns.putaway', $grn->_id) }}" class="btn btn-primary">
-                                    <i class="ri-inbox-line me-1"></i> Start Putaway
+                                    <i class="ri-inbox-line me-1"></i> Putaway
                                 </a>
                             @endif
                             <a href="{{ route('tenant.grns.index') }}" class="btn btn-secondary">
@@ -45,13 +50,23 @@
                                 <tr><th width="40%">GRN Number</th><td><strong>{{ $grn->grn_number }}</strong></td></tr>
                                 <tr><th>Status</th><td>
                                     @if($grn->status == 'pending')
-                                        <span class="badge bg-warning">Pending</span>
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    @elseif($grn->status == 'approved')
+                                        <span class="badge bg-success">Approved</span>
                                     @elseif($grn->status == 'in_progress')
                                         <span class="badge bg-primary">In Progress</span>
                                     @elseif($grn->status == 'completed')
                                         <span class="badge bg-success">Completed</span>
+                                    @elseif($grn->status == 'cancelled')
+                                        <span class="badge bg-danger">Cancelled</span>
                                     @endif
                                 </td></tr>
+                                @if($grn->sap_grn_id)
+                                <tr><th>SAP GRN ID</th><td>{{ $grn->sap_grn_id }}</td></tr>
+                                @endif
+                                @if($grn->approved_at)
+                                <tr><th>Approved Date</th><td>{{ \Carbon\Carbon::parse($grn->approved_at)->format('Y-m-d H:i') }}</td></tr>
+                                @endif
                                 <tr><th>Putaway Status</th><td>
                                     @if($grn->putaway_status == 'pending')
                                         <span class="badge bg-secondary">Pending</span>

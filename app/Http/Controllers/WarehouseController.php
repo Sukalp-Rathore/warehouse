@@ -51,8 +51,22 @@ class WarehouseController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter warehouses by user's warehouse access
+        $user = session('user');
+        $userWarehouseAccess = $user['warehouse_access'] ?? [];
+        if (!empty($userWarehouseAccess)) {
+            $query->whereIn('_id', $userWarehouseAccess);
+        }
+
         $warehouses = $query->with('plant')->paginate(15);
-        $plants = Plant::active()->get();
+        
+        // Filter plants by user's plant access
+        $userPlantAccess = $user['plant_access'] ?? [];
+        $plantsQuery = Plant::active();
+        if (!empty($userPlantAccess)) {
+            $plantsQuery->whereIn('_id', $userPlantAccess);
+        }
+        $plants = $plantsQuery->get();
 
         return view('tenant.warehouses.index', compact('warehouses', 'plants'));
     }
@@ -195,7 +209,8 @@ class WarehouseController extends Controller
     public function show($id)
     {
         $warehouse = Warehouse::with(['plant', 'bins', 'sections'])->findOrFail($id);
-        $storageTypes = StorageType::where('warehouse_id', $id)->orWhereNull('warehouse_id')->get();
+        // Storage types are master data, available to all warehouses
+        $storageTypes = StorageType::active()->get();
         
         return view('tenant.warehouses.show', compact('warehouse', 'storageTypes'));
     }

@@ -1,39 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tenant Onboarding - WMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .card-header {
-            border-bottom: 2px solid rgba(0,0,0,0.1);
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-        .btn-primary {
-            background: linear-gradient(45deg, #007bff, #0056b3);
-            border: none;
-            padding: 12px 30px;
-            font-weight: 600;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(45deg, #0056b3, #004085);
-            transform: translateY(-1px);
-        }
-        .loading {
-            display: none;
-        }
-        .alert {
-            border-radius: 10px;
-        }
-    </style>
-</head>
-<body class="bg-light">
-    <div class="container-fluid py-4">
+@extends('layout')
+
+@section('content')
+<style>
+    .card-header {
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .btn-primary {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+        padding: 12px 30px;
+        font-weight: 600;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #0056b3, #004085);
+        transform: translateY(-1px);
+    }
+    .loading {
+        display: none;
+    }
+    .alert {
+        border-radius: 10px;
+    }
+</style>
+
+<div class="main-content app-content">
+    <div class="container-fluid">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-10">
                 <!-- Header -->
@@ -153,8 +148,7 @@
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('tenantSetupForm');
@@ -293,5 +287,4 @@
             }
         });
     </script>
-</body>
-</html>
+@endsection

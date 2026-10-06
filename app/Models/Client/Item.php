@@ -49,20 +49,6 @@ class Item extends Model
     ];
 
     protected $casts = [
-        'dimensions' => 'array',
-        'vendor_ids' => 'array',
-        'specifications' => 'array',
-        'reorder_settings' => 'array',
-        'storage_strategy' => 'array',
-        'attributes' => 'array',
-        'weight' => 'decimal:2',
-        'weight_per_unit' => 'decimal:3',
-        'volume' => 'decimal:3',
-        'volume_per_unit' => 'decimal:4',
-        'minimum_order_quantity' => 'integer',
-        'reorder_level' => 'integer',
-        'reorder_quantity' => 'integer',
-        'expire_life_days' => 'integer',
         'is_active' => 'boolean',
         'is_hazmat' => 'boolean',
         'temperature_controlled' => 'boolean',
@@ -72,6 +58,39 @@ class Item extends Model
         'created_at',
         'updated_at'
     ];
+
+    /**
+     * Accessors for array fields to ensure they're always arrays
+     */
+    public function getDimensionsAttribute($value)
+    {
+        return is_array($value) ? $value : ($value ? json_decode($value, true) ?? [] : []);
+    }
+
+    public function getVendorIdsAttribute($value)
+    {
+        return is_array($value) ? $value : ($value ? json_decode($value, true) ?? [] : []);
+    }
+
+    public function getSpecificationsAttribute($value)
+    {
+        return is_array($value) ? $value : ($value ? json_decode($value, true) ?? [] : []);
+    }
+
+    public function getReorderSettingsAttribute($value)
+    {
+        return is_array($value) ? $value : ($value ? json_decode($value, true) ?? [] : []);
+    }
+
+    public function getStorageStrategyAttribute($value)
+    {
+        return is_array($value) ? $value : ($value ? json_decode($value, true) ?? [] : []);
+    }
+
+    public function getAttributesAttribute($value)
+    {
+        return is_array($value) ? $value : ($value ? json_decode($value, true) ?? [] : []);
+    }
 
     /**
      * Get all vendors for this item

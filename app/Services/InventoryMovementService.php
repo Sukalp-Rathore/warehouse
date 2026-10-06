@@ -32,8 +32,6 @@ class InventoryMovementService
      */
     public function transfer($fromBinId, $toBinId, $itemId, $quantity, $batchId = null, $referenceDoc = null, $notes = null, $fromInventoryId = null)
     {
-        DB::connection('tenant')->beginTransaction();
-        
         try {
             // Find source inventory
             if ($fromInventoryId) {
@@ -144,8 +142,6 @@ class InventoryMovementService
                 'notes' => $notes,
             ]);
 
-            DB::connection('tenant')->commit();
-
             // Record billing usage for a transfer transaction
             $this->billingUsage->recordTransactionEvent(1);
             
@@ -154,7 +150,6 @@ class InventoryMovementService
                 'inventory' => $destinationInventory
             ];
         } catch (\Exception $e) {
-            DB::connection('tenant')->rollBack();
             return [
                 'success' => false,
                 'message' => $e->getMessage()
@@ -167,7 +162,6 @@ class InventoryMovementService
      */
     public function pick($binId, $itemId, $quantity, $batchId = null, $referenceDoc = null, $notes = null)
     {
-        DB::connection('tenant')->beginTransaction();
         
         try {
             $query = Inventory::where('bin_id', $binId)
@@ -216,8 +210,6 @@ class InventoryMovementService
                 'notes' => $notes,
             ]);
 
-            DB::connection('tenant')->commit();
-
             // Record billing usage for a pick transaction
             $this->billingUsage->recordTransactionEvent(1);
             
@@ -226,7 +218,6 @@ class InventoryMovementService
                 'inventory' => $inventory
             ];
         } catch (\Exception $e) {
-            DB::connection('tenant')->rollBack();
             return [
                 'success' => false,
                 'message' => $e->getMessage()
@@ -239,7 +230,6 @@ class InventoryMovementService
      */
     public function putaway($warehouseId, $binId, $itemId, $quantity, $batchId = null, $grnId = null, $referenceDoc = null, $codes = null)
     {
-        DB::connection('tenant')->beginTransaction();
         
         try {
             $item = Item::find($itemId);
@@ -349,8 +339,6 @@ class InventoryMovementService
                 'metadata' => $grnId ? ['grn_id' => $grnId] : null,
             ]);
 
-            DB::connection('tenant')->commit();
-
             // Record billing usage for a putaway transaction
             $this->billingUsage->recordTransactionEvent(1);
             
@@ -359,7 +347,6 @@ class InventoryMovementService
                 'inventory' => $inventory
             ];
         } catch (\Exception $e) {
-            DB::connection('tenant')->rollBack();
             return [
                 'success' => false,
                 'message' => $e->getMessage()
@@ -372,7 +359,6 @@ class InventoryMovementService
      */
     public function adjustment($binId, $itemId, $quantity, $batchId = null, $reason = null, $adjustmentType = 'adjust')
     {
-        DB::connection('tenant')->beginTransaction();
         
         try {
             $item = Item::find($itemId);
@@ -450,8 +436,6 @@ class InventoryMovementService
                 ],
             ]);
 
-            DB::connection('tenant')->commit();
-
             // Record billing usage for a stock adjustment transaction
             $this->billingUsage->recordTransactionEvent(1);
             
@@ -460,7 +444,6 @@ class InventoryMovementService
                 'inventory' => $inventory
             ];
         } catch (\Exception $e) {
-            DB::connection('tenant')->rollBack();
             return [
                 'success' => false,
                 'message' => $e->getMessage()
@@ -473,7 +456,6 @@ class InventoryMovementService
      */
     public function qcHold($inventoryId, $holdBinId = null, $notes = null)
     {
-        DB::connection('tenant')->beginTransaction();
         
         try {
             $inventory = Inventory::find($inventoryId);
@@ -522,8 +504,6 @@ class InventoryMovementService
                 'notes' => $notes,
             ]);
 
-            DB::connection('tenant')->commit();
-
             // Record billing usage for a QC hold transaction
             $this->billingUsage->recordTransactionEvent(1);
             
@@ -535,7 +515,6 @@ class InventoryMovementService
                 'inventory' => $inventory
             ];
         } catch (\Exception $e) {
-            DB::connection('tenant')->rollBack();
             return [
                 'success' => false,
                 'message' => $e->getMessage()

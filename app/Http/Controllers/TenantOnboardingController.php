@@ -47,7 +47,8 @@ class TenantOnboardingController extends Controller
         ]);
 
         try {
-            DB::beginTransaction();
+            // Note: Transactions removed for standalone MongoDB compatibility
+            // For production with replica sets, you can re-enable transactions
 
             // Generate unique client ID and database name
             $clientId = 'CLT_' . strtoupper(Str::random(8));
@@ -80,8 +81,6 @@ class TenantOnboardingController extends Controller
             // Create admin user in the tenant database
             $this->createTenantAdminUser($request, $clientId, $databaseName);
 
-            DB::commit();
-
             return response()->json([
                 'success' => true,
                 'message' => 'Tenant onboarded successfully! Admin user created and ready to login.',
@@ -92,7 +91,15 @@ class TenantOnboardingController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            // Manual cleanup on error (since we can't use transactions)
+            try {
+                if (isset($clientId)) {
+                    Client::where('client_id', $clientId)->delete();
+                    TenantSettings::where('client_id', $clientId)->delete();
+                }
+            } catch (\Exception $cleanupError) {
+                \Log::error('Cleanup failed: ' . $cleanupError->getMessage());
+            }
             
             // Log the error for debugging
             \Log::error('Tenant onboarding failed: ' . $e->getMessage(), [
@@ -179,7 +186,7 @@ class TenantOnboardingController extends Controller
     public function destroy($clientId)
     {
         try {
-            DB::beginTransaction();
+            // Note: Transactions removed for standalone MongoDB compatibility
 
             // Delete tenant settings
             $tenant = TenantSettings::where('client_id', $clientId)->firstOrFail();
@@ -192,16 +199,12 @@ class TenantOnboardingController extends Controller
             // TODO: Drop tenant database (implement based on your database setup)
             // $this->configService->dropTenantDatabase($client->database_name);
 
-            DB::commit();
-
             return response()->json([
                 'success' => true,
                 'message' => 'Tenant deleted successfully!'
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete tenant: ' . $e->getMessage()

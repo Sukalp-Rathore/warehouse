@@ -21,7 +21,6 @@ class Role extends Model
     ];
 
     protected $casts = [
-        'permissions' => 'array',
         'is_active' => 'boolean',
     ];
 
@@ -29,6 +28,51 @@ class Role extends Model
         'created_at',
         'updated_at'
     ];
+
+    /**
+     * Get the permissions attribute
+     * Ensures permissions is always an array
+     */
+    public function getPermissionsAttribute($value)
+    {
+        // If value is already an array, return it
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        // If value is null, return empty array
+        if ($value === null) {
+            return [];
+        }
+        
+        // If value is a string, try to decode it
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        
+        // Default to empty array
+        return [];
+    }
+
+    /**
+     * Set the permissions attribute
+     * Ensures permissions is always stored as array
+     */
+    public function setPermissionsAttribute($value)
+    {
+        // If it's already an array, store it directly
+        if (is_array($value)) {
+            $this->attributes['permissions'] = $value;
+        } elseif (is_string($value)) {
+            // If it's a string, try to decode it
+            $decoded = json_decode($value, true);
+            $this->attributes['permissions'] = is_array($decoded) ? $decoded : [];
+        } else {
+            // Default to empty array
+            $this->attributes['permissions'] = [];
+        }
+    }
 
     /**
      * Get users with this role

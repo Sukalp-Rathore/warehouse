@@ -245,8 +245,6 @@ class TransferOrderService
      */
     public function execute($toId, $userId = null)
     {
-        DB::connection('tenant')->beginTransaction();
-
         try {
             $transferOrder = TransferOrder::find($toId);
 
@@ -281,15 +279,12 @@ class TransferOrderService
             // Complete transfer order
             $transferOrder->complete();
 
-            DB::connection('tenant')->commit();
-
             return [
                 'success' => true,
                 'transfer_order' => $transferOrder,
                 'inventory' => $result['inventory']
             ];
         } catch (\Exception $e) {
-            DB::connection('tenant')->rollBack();
             return [
                 'success' => false,
                 'message' => $e->getMessage()

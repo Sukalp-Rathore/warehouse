@@ -167,12 +167,21 @@ class ItemController extends Controller
                 $imageUrl = Storage::url($imagePath);
             }
 
+            // Get category name from category_id if provided
+            $categoryName = $request->category;
+            if ($request->filled('category_id')) {
+                $category = ItemCategory::find($request->category_id);
+                if ($category) {
+                    $categoryName = $category->category_name;
+                }
+            }
+
             $item = Item::create([
                 'item_code' => $request->item_code,
                 'description' => $request->description,
                 'short_description' => $request->short_description,
                 'category_id' => $request->category_id,
-                'category' => $request->category,
+                'category' => $categoryName,
                 'subcategory' => $request->subcategory,
                 'uom' => $request->uom,
                 'weight' => $request->weight,
@@ -318,12 +327,21 @@ class ItemController extends Controller
                 ];
             }
 
+            // Get category name from category_id if provided
+            $categoryName = $request->category;
+            if ($request->filled('category_id')) {
+                $category = ItemCategory::find($request->category_id);
+                if ($category) {
+                    $categoryName = $category->category_name;
+                }
+            }
+
             $updateData = [
                 'item_code' => $request->item_code,
                 'description' => $request->description,
                 'short_description' => $request->short_description,
                 'category_id' => $request->category_id,
-                'category' => $request->category,
+                'category' => $categoryName,
                 'subcategory' => $request->subcategory,
                 'uom' => $request->uom,
                 'weight' => $request->weight,

@@ -38,10 +38,106 @@ class User extends Model implements UserContract
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'permissions' => 'array',
-        'plant_access' => 'array',
-        'warehouse_access' => 'array',
     ];
+
+    /**
+     * Get permissions attribute - ensure it's always an array
+     */
+    public function getPermissionsAttribute($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if ($value === null) {
+            return [];
+        }
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    }
+
+    /**
+     * Set permissions attribute - ensure it's stored as array
+     */
+    public function setPermissionsAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['permissions'] = $value;
+        } elseif (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $this->attributes['permissions'] = is_array($decoded) ? $decoded : [];
+        } else {
+            $this->attributes['permissions'] = [];
+        }
+    }
+
+    /**
+     * Get plant_access attribute - ensure it's always an array
+     */
+    public function getPlantAccessAttribute($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if ($value === null) {
+            return [];
+        }
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    }
+
+    /**
+     * Set plant_access attribute - ensure it's stored as array
+     */
+    public function setPlantAccessAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['plant_access'] = $value;
+        } elseif (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $this->attributes['plant_access'] = is_array($decoded) ? $decoded : [];
+        } else {
+            $this->attributes['plant_access'] = [];
+        }
+    }
+
+    /**
+     * Get warehouse_access attribute - ensure it's always an array
+     */
+    public function getWarehouseAccessAttribute($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if ($value === null) {
+            return [];
+        }
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    }
+
+    /**
+     * Set warehouse_access attribute - ensure it's stored as array
+     */
+    public function setWarehouseAccessAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['warehouse_access'] = $value;
+        } elseif (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $this->attributes['warehouse_access'] = is_array($decoded) ? $decoded : [];
+        } else {
+            $this->attributes['warehouse_access'] = [];
+        }
+    }
 
     /**
      * Get the role associated with the user
@@ -53,12 +149,11 @@ class User extends Model implements UserContract
 
     /**
      * Get plants the user has access to
-     * Note: This is a helper method, not a relationship, since plant_access is an array
-     * Use getPlantsAttribute() or load plants manually in controllers
+     * Note: This is a helper method, not a relationship
      */
-    public function getPlantsAttribute()
+    public function getAccessiblePlants()
     {
-        $plantIds = $this->attributes['plant_access'] ?? $this->plant_access ?? [];
+        $plantIds = $this->plant_access ?? [];
         if (empty($plantIds)) {
             return collect();
         }
@@ -67,11 +162,11 @@ class User extends Model implements UserContract
 
     /**
      * Get warehouses the user has access to
-     * Note: This is a helper method, not a relationship, since warehouse_access is an array
+     * Note: This is a helper method, not a relationship
      */
-    public function getWarehousesAttribute()
+    public function getAccessibleWarehouses()
     {
-        $warehouseIds = $this->attributes['warehouse_access'] ?? $this->warehouse_access ?? [];
+        $warehouseIds = $this->warehouse_access ?? [];
         if (empty($warehouseIds)) {
             return collect();
         }

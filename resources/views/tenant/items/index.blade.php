@@ -80,7 +80,13 @@
                                     <tr>
                                         <td><strong>{{ $item->item_code }}</strong></td>
                                         <td>{{ $item->description }}</td>
-                                        <td>{{ $item->category ?? 'N/A' }}</td>
+                                        <td>
+                                            @if($item->category_id && $item->categoryModel)
+                                                {{ $item->categoryModel->category_name }}
+                                            @else
+                                                {{ $item->category ?? 'N/A' }}
+                                            @endif
+                                        </td>
                                         <td>{{ $item->uom }}</td>
                                         <td>
                                             @if($item->vendor_ids && count($item->vendor_ids) > 0)

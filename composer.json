@@ -8,9 +8,9 @@
     "require": {
         "php": "^8.2",
         "guzzlehttp/guzzle": "^7.9",
+        "laravel/cashier": "^16.5",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "laravel/cashier": "^15.0",
         "mongodb/laravel-mongodb": "^5.4",
         "picqer/php-barcode-generator": "^3.2",
         "sentry/sentry-laravel": "^4.16",
